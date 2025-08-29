@@ -1,6 +1,7 @@
 "use client";
 
 import { signIn } from "next-auth/react";
+import { Button } from "@mui/material";
 
 export default function SignIn() {
   return (
@@ -11,12 +12,18 @@ export default function SignIn() {
           Sign in to Airtable
         </h1>
         
-        <button
+        <Button
           onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
           className="mt-5 border rounded"
+          variant="outlined"
+          sx={{
+            mt: 5, 
+            color:"black",
+            borderColor: "black",
+          }}
         >
           <span>Sign in with Google</span>
-        </button>
+        </Button>
       </div>
     </main>
   );
