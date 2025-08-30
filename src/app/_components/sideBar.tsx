@@ -11,12 +11,10 @@ import { useEffect, useState } from "react";
 interface SideBarProps {
   sidebarOpen: boolean;
   setSideBarOpen: (open: boolean) => void;
-  hovered: boolean;
-  setHovered: (open: boolean) => void;
 }
 
-export default function SideBar({ sidebarOpen, setSideBarOpen, hovered, setHovered}: SideBarProps) {
-  // const [hovered, setHovered] = useState(false);
+export default function SideBar({ sidebarOpen, setSideBarOpen}: SideBarProps) {
+  const [hovered, setHovered] = useState(false);
   const toggleSidebar = () => setSideBarOpen(!sidebarOpen);
 
   const isOpen = sidebarOpen || hovered;

@@ -11,8 +11,8 @@ interface HeaderProps {
 export default function Header({ sidebarOpen, setSideBarOpen}: HeaderProps) {
   const toggleSidebar = () => setSideBarOpen(!sidebarOpen);
 
-  const handleSignOut = () => {
-    signOut({ callbackUrl: '/' }); // Redirect to the homepage after signing out
+  const handleSignOut = async () => {
+    await signOut({ callbackUrl: '/' });
   };
   
   return (

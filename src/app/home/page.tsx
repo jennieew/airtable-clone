@@ -9,9 +9,6 @@ import SideBar from "../_components/sideBar";
 
 export default function DashboardPage() {
   const [sidebarOpen, setSideBarOpen] = useState(true);
-  const [hovered, setHovered] = useState(false);
-
-  const isOpen = sidebarOpen || hovered;
 
   // const { data: session, status } = useSession();
   // const router = useRouter();
@@ -33,12 +30,12 @@ export default function DashboardPage() {
     <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
 
       <Header sidebarOpen={sidebarOpen} setSideBarOpen={setSideBarOpen} />
-      <SideBar sidebarOpen={sidebarOpen} setSideBarOpen={setSideBarOpen} hovered={hovered} setHovered={setHovered}/>
+      <SideBar sidebarOpen={sidebarOpen} setSideBarOpen={setSideBarOpen}/>
 
       <Box 
         sx={{ 
           mt: "56px", p: 2,
-          ml: isOpen ? "300px" : "50px",
+          ml: sidebarOpen ? "300px" : "50px",
           flexShrink: 0,
           backgroundColor: "#f9fafc",
           flex: 1,
