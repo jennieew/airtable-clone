@@ -13,7 +13,7 @@ export default function SignIn() {
         </h1>
         
         <Button
-          onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
+          onClick={() => signIn("google", { callbackUrl: "/home" })}
           className="mt-5 border rounded"
           variant="outlined"
           sx={{
