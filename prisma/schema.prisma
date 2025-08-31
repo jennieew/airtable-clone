@@ -90,6 +90,12 @@ model Table {
 }
 
 model Base {
-    baseId String @id
-    tables Table[]
+    baseId    String @id
+    name      String
+    createdAt DateTime @default(now())
+    authorId  String
+
+    tables    Table[]
+
+    @@index([name])
 }

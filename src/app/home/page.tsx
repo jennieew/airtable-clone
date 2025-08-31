@@ -1,11 +1,13 @@
-"use client"
+"use client" 
 
 import { useState } from "react";
 // import { useRouter } from "next/navigation";
 // import { useSession } from "next-auth/react";
-import { Box } from "@mui/material";
+import { Box, CircularProgress, Grid } from "@mui/material";
 import Header from "../_components/header";
 import SideBar from "../_components/sideBar";
+import { api } from "@/trpc/react";
+import BaseCard from "../_components/base";
 
 export default function DashboardPage() {
   const [sidebarOpen, setSideBarOpen] = useState(true);
@@ -26,6 +28,9 @@ export default function DashboardPage() {
   //     <p>Welcome, {session.user?.name}!</p>
   //   </div>
   // );
+
+  const { data, isLoading, error } = api.post.getAll.useQuery();
+
   return (
     <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
 
@@ -44,6 +49,19 @@ export default function DashboardPage() {
         }}
       >
         <h1 className="text-[1.7rem] leading-relaxed font-bold text-left pb-2.5 text-[#1c1c24]">Home</h1>
+        <div>
+          {isLoading && <CircularProgress />} 
+          {error && <p style={{ color: "red" }}>Error: {error.message}</p>}
+          {data && (
+            <Grid container spacing={2}>
+              {data.map((base) => (
+                <Grid size={{ xs: 12, sm : 6, md: 4, lg: 3 }} key={base.baseId}>
+                  <BaseCard base={base} />
+                </Grid>
+              ))}
+            </Grid>
+          )}
+        </div>
       </Box>
     </div>
   )
