@@ -72,3 +72,24 @@ model VerificationToken {
 
     @@unique([identifier, token])
 }
+
+model Row {
+    rowId       String @id
+    tableId     String
+
+    table       Table @relation(fields: [tableId], references: [tableId], onDelete: Cascade)
+}
+
+model Table {
+    tableId String @id
+    baseId  String
+    base    Base @relation(fields: [baseId], references: [baseId], onDelete: Cascade)
+
+    rows    Row[]
+    fields  String[]
+}
+
+model Base {
+    baseId String @id
+    tables Table[]
+}
