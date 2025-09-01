@@ -29,7 +29,7 @@ export default function DashboardPage() {
   //   </div>
   // );
 
-  const { data, isLoading, error } = api.post.getAll.useQuery();
+  const { data, isLoading, error } = api.base.getUserBases.useQuery();
 
   return (
     <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>

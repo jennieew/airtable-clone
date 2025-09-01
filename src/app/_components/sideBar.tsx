@@ -1,3 +1,5 @@
+"use client"
+
 import { Box, Button, Divider, Drawer, List } from "@mui/material";
 import HomeOutlinedIcon from '@mui/icons-material/HomeOutlined';
 import StarBorderRoundedIcon from '@mui/icons-material/StarBorderRounded';
@@ -7,6 +9,8 @@ import GroupsOutlinedIcon from '@mui/icons-material/GroupsOutlined';
 import { redirect } from "next/navigation";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { api } from "@/utils/api";
 
 interface SideBarProps {
   sidebarOpen: boolean;
@@ -16,6 +20,18 @@ interface SideBarProps {
 export default function SideBar({ sidebarOpen, setSideBarOpen}: SideBarProps) {
   const [hovered, setHovered] = useState(false);
   const toggleSidebar = () => setSideBarOpen(!sidebarOpen);
+
+  const router = useRouter();
+  const createBase = api.base.createBase.useMutation();
+  const handleCreate = async () => {
+    try {
+      const newBase = await createBase.mutateAsync();
+      console.log("New base created:", newBase);
+      router.push(`/base/${newBase.baseId}`);
+    } catch (err) {
+      console.error("Failed to create base", err);
+    }
+  };
 
   const isOpen = sidebarOpen || hovered;
   
@@ -58,6 +74,7 @@ export default function SideBar({ sidebarOpen, setSideBarOpen}: SideBarProps) {
           height: "30px",
           alignSelf: "center",
         }}
+        onClick={() => handleCreate()}
       >
         + Create
       </Button>

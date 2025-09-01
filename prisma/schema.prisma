@@ -63,6 +63,7 @@ model User {
     accounts      Account[]
     sessions      Session[]
     posts         Post[]
+    bases         Base[]
 }
 
 model VerificationToken {
@@ -74,14 +75,14 @@ model VerificationToken {
 }
 
 model Row {
-    rowId       String @id
+    rowId       String @id @default(cuid())
     tableId     String
 
     table       Table @relation(fields: [tableId], references: [tableId], onDelete: Cascade)
 }
 
 model Table {
-    tableId String @id
+    tableId String @id @default(cuid())
     baseId  String
     base    Base @relation(fields: [baseId], references: [baseId], onDelete: Cascade)
 
@@ -90,10 +91,11 @@ model Table {
 }
 
 model Base {
-    baseId    String @id
-    name      String
+    baseId    String @id @default(cuid())
+    name      String @default("untitled base")
     createdAt DateTime @default(now())
     authorId  String
+    author    User @relation(fields:[authorId], references: [id])
 
     tables    Table[]
 
