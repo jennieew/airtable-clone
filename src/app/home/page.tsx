@@ -4,10 +4,10 @@ import { useState } from "react";
 // import { useRouter } from "next/navigation";
 // import { useSession } from "next-auth/react";
 import { Box, CircularProgress, Grid } from "@mui/material";
-import Header from "../_components/header";
-import SideBar from "../_components/sideBar";
+import Header from "../home_components/header";
+import SideBar from "../home_components/sideBar";
 import { api } from "@/trpc/react";
-import BaseCard from "../_components/base";
+import BaseCard from "../home_components/base";
 
 export default function DashboardPage() {
   const [sidebarOpen, setSideBarOpen] = useState(true);

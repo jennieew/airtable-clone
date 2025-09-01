@@ -1,5 +1,5 @@
 import MenuIcon from '@mui/icons-material/Menu';
-import SearchBar from "../_components/searchBar";
+import SearchBar from "./searchBar";
 import { AppBar, Box, Button, IconButton, Tooltip } from "@mui/material";
 import { signOut } from "next-auth/react";
 

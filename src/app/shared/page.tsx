@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { Box } from "@mui/material";
-import Header from "../_components/header";
-import SideBar from "../_components/sideBar";
+import Header from "../home_components/header";
+import SideBar from "../home_components/sideBar";
 
 export default function StarredPage() {
   const [sidebarOpen, setSideBarOpen] = useState(true);
