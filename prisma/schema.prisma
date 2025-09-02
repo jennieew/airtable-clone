@@ -74,22 +74,6 @@ model VerificationToken {
     @@unique([identifier, token])
 }
 
-model Row {
-    rowId       String @id @default(cuid())
-    tableId     String
-
-    table       Table @relation(fields: [tableId], references: [tableId], onDelete: Cascade)
-}
-
-model Table {
-    tableId String @id @default(cuid())
-    baseId  String
-    base    Base @relation(fields: [baseId], references: [baseId], onDelete: Cascade)
-
-    rows    Row[]
-    fields  String[]
-}
-
 model Base {
     baseId    String @id @default(cuid())
     name      String @default("untitled base")
@@ -100,4 +84,51 @@ model Base {
     tables    Table[]
 
     @@index([name])
+}
+
+model Table {
+    tableId String @id @default(cuid())
+    baseId  String
+    base    Base @relation(fields: [baseId], references: [baseId], onDelete: Cascade)
+    
+    name    String
+    columns Column[]
+    rows    Row[]
+    fields  String[]
+}
+
+model Row {
+    rowId   String @id @default(cuid())
+    tableId String
+    table   Table @relation(fields: [tableId], references: [tableId], onDelete: Cascade)
+
+    values  Cell[]
+}
+
+enum ColumnType {
+  STRING
+  NUMBER
+}
+
+model Column {
+    columnId String @id @default(cuid())
+    name     String
+    type     ColumnType
+    tableId  String
+    table    Table @relation(fields: [tableId], references: [tableId], onDelete: Cascade)
+
+    values   Cell[]
+}
+
+model Cell {
+    cellId String @id @default(cuid())
+    rowId String
+    row      Row      @relation(fields: [rowId], references: [rowId], onDelete: Cascade)
+
+    columnId String
+    column   Column   @relation(fields: [columnId], references: [columnId], onDelete: Cascade)
+
+    // store either number or string
+    stringValue String? 
+    numberValue Float?
 }
