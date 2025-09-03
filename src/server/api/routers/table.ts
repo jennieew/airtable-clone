@@ -13,17 +13,35 @@ export const tableRouter = createTRPCRouter({
     .input(
       z.object({ baseId: z.string() })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ ctx, input }) => {
       const { baseId } = input
 
-      const count = await db.table.count({ where: { baseId } });
+      const base = await ctx.db.base.findUnique({
+        where: { baseId },
+      });
+
+      if (!base) throw new Error("Base not found");
+
+      // check the owner of the base
+      if (base.authorId !== ctx.session.user.id) {
+        throw new Error("Unauthorized");
+      }
 
       const newTable = await db.table.create({
         data: {
-          name: `Table ${count + 1}`,
+          name: `Table ${base.tableCount + 1}`,
           baseId,
         }
       })
+
+      await db.base.update({
+        where: { baseId },
+        data: {
+          tableCount: {
+            increment: 1,
+          },
+        },
+      });
 
       const defaultColumns = [
         { name: "Name", type: ColumnType.STRING },
@@ -60,4 +78,16 @@ export const tableRouter = createTRPCRouter({
       
       return newTable;
     }),
+
+    getTable: protectedProcedure
+      .input(
+        z.object({ tableId: z.string() })
+      )
+      .query(async ({ ctx, input }) => {
+        return await ctx.db.table.findUnique({
+          where: {
+            tableId: input.tableId
+          },
+        })
+      })
 })

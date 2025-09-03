@@ -24,6 +24,18 @@ export const baseRouter = createTRPCRouter({
                     baseId: input.baseId,
                     authorId: ctx.session.user.id,
                 },
+                include: {
+                    tables: {
+                        include: {
+                            columns: true,
+                            rows: {
+                                include: {
+                                    values: true,
+                                }
+                            },
+                        },
+                    },
+                },
             });
         }),
 
@@ -47,7 +59,7 @@ export const baseRouter = createTRPCRouter({
                         rows: {
                             create: [{}, {}, {}],
                         },
-                        fields: [],
+                        // fields: [],
                     },
                 },
             },
