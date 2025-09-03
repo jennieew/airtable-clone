@@ -36,8 +36,9 @@ export default function BaseHeader({ base }: BaseCardProps) {
         utils.base.getBase.setData({ baseId: context.previousBase.baseId }, context.previousBase);
       }
     },
-    onSettled: () => {
-      utils.base.getBase.invalidate({ baseId: base.baseId })
+    onSettled: async () => {
+      await utils.base.getBase.invalidate({ baseId: base.baseId });
+      await utils.base.getUserBases.invalidate();
     }
   });
 
@@ -93,10 +94,10 @@ export default function BaseHeader({ base }: BaseCardProps) {
               e.stopPropagation();
               if (e.key === "Enter") {
                 e.preventDefault();
-                handleRenameBase();
+                void handleRenameBase();
               }
             }}
-            onBlur={handleRenameBase}
+            onBlur={void handleRenameBase}
           />
         </MenuItem>
         <MenuItem>Appearance</MenuItem>

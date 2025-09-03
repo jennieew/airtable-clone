@@ -114,5 +114,19 @@ export const tableRouter = createTRPCRouter({
       });
 
       return { success: true, tableId: input.tableId, baseId: table.baseId };
-    })
+    }),
+
+  renameTable: protectedProcedure
+    .input(
+      z.object({
+        tableId: z.string(),
+        name: z.string(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      return ctx.db.table.update({
+        where: { tableId: input.tableId },
+        data: { name: input.name }
+      });
+    }),
 })

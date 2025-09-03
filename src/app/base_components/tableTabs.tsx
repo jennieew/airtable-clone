@@ -52,12 +52,39 @@ export default function TableTabs({ tables, selectedTab, setSelectedTab, baseId 
         utils.base.getBase.setData({ baseId }, context.previousBase);
       }
     },
-    onSettled: async (data) => {
-      if (data?.baseId) {
-        await utils.base.getBase.invalidate({ baseId: data.baseId })
-      }
+    onSettled: async () => {
+      await utils.base.getBase.invalidate({ baseId })
     }
-  })
+  });
+
+  const renameTable = api.table.renameTable.useMutation({
+    onMutate: async ({ tableId, name }) => {
+      await utils.base.getBase.cancel({ baseId });
+      await utils.table.getTable.cancel({ tableId });
+
+      const previousBase = utils.base.getBase.getData({ baseId });
+
+      utils.base.getBase.setData({ baseId }, (old) => {
+        if (!old) return old;
+        return {
+          ...old,
+          tables: old.tables.map((t) =>
+            t.tableId === tableId ? { ...t, name } : t
+          ),
+        };
+      });
+
+      return { previousBase };
+    },
+    onError: (err, variables, context) => {
+      if (context?.previousBase) {
+        utils.base.getBase.setData({ baseId }, context.previousBase);
+      }
+    },
+    onSettled: async () => {
+      await utils.base.getBase.invalidate({ baseId: baseId })
+    }
+  });
 
   return (
     <Box sx={{ display: "flex", gap: 1 }}>
@@ -87,7 +114,8 @@ export default function TableTabs({ tables, selectedTab, setSelectedTab, baseId 
         open={Boolean(anchorEl)}
         onClose={handleCloseMenu}
       >
-        <MenuItem onClick={() => { 
+        <MenuItem onClick={() => {
+          renameTable.mutate({ tableId: menuTableId, name: "to fix" });
           handleCloseMenu(); 
         }}>
           Rename
