@@ -79,15 +79,15 @@ export const tableRouter = createTRPCRouter({
       return newTable;
     }),
 
-    getTable: protectedProcedure
-      .input(
-        z.object({ tableId: z.string() })
-      )
-      .query(async ({ ctx, input }) => {
-        return await ctx.db.table.findUnique({
-          where: {
-            tableId: input.tableId
-          },
-        })
+  getTable: protectedProcedure
+    .input(
+      z.object({ tableId: z.string() })
+    )
+    .query(async ({ ctx, input }) => {
+      return await ctx.db.table.findUnique({
+        where: {
+          tableId: input.tableId
+        },
       })
+    }),
 })

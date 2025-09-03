@@ -7,7 +7,7 @@ import { useParams } from "next/navigation";
 import { api } from "@/utils/api";
 
 import { useState } from "react";
-import { Box, Button, CircularProgress, Tab, Tabs } from "@mui/material";
+import { Box, Button, Tab, Tabs } from "@mui/material";
 
 export default function BasePage() {
   const [selectedTab, setSelectedTab] = useState(0);
@@ -36,7 +36,6 @@ export default function BasePage() {
       <BaseSideBar/>
       <BaseHeader base={base}/>
       <div className="pl-[60px]">
-        {/* {isLoading && <CircularProgress />} */}
         {base && (
           <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
             <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
