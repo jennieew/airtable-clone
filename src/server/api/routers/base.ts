@@ -47,6 +47,7 @@ export const baseRouter = createTRPCRouter({
                 tables: {
                     create: {
                         name: "Table 1",
+                        authorId: ctx.session.user.id,
                         columns: {
                             create: [
                                 { name: "Name", type: "STRING" },
@@ -96,7 +97,6 @@ export const baseRouter = createTRPCRouter({
             })
         )
         .mutation(async ({ ctx, input }) => {
-            // make sure the user owns the base
             const base = await ctx.db.base.findUnique({
                 where: { baseId: input.baseId },
             });
@@ -104,7 +104,8 @@ export const baseRouter = createTRPCRouter({
             if (!base) {
                 throw new Error("Base not found");
             }
-
+            
+            // make sure the user owns the base
             if (base.authorId !== ctx.session.user.id) {
                 throw new Error("Not authorized to delete this base");
             }

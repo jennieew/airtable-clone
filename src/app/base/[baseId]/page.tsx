@@ -7,7 +7,8 @@ import { useParams } from "next/navigation";
 import { api } from "@/utils/api";
 
 import { useState } from "react";
-import { Box, Button, Tab, Tabs } from "@mui/material";
+import { Box, Button } from "@mui/material";
+import TableTabs from "@/app/base_components/tableTabs";
 
 export default function BasePage() {
   const [selectedTab, setSelectedTab] = useState(0);
@@ -29,15 +30,17 @@ export default function BasePage() {
 
       const previousBase = utils.base.getBase.getData({ baseId });
       utils.base.getBase.setData({ baseId }, (old) => {
-        if (!old) return old;
+        if (!old || !previousBase) return old;
+
         return {
           ...old,
           tables: [
             ...old.tables,
             { 
-              tableId: "temp-id",
+              tableId: `temp-${Date.now()}`,
               baseId: old.baseId,
-              name: `Table ${old.tables.length + 1}`, 
+              authorId: old.authorId,
+              name: `Table ${previousBase?.tableCount + 1}`, 
               columns: [], 
               rows: [] },
           ],
@@ -59,6 +62,9 @@ export default function BasePage() {
   if (isLoading) return <p>Loading...</p>;
   if (!base) return <p>Base not found</p>;
 
+  // if a table is being created, disable create new table
+  const isCreateDisabled = createTable.status === "pending" || base?.tables.some(t => t.tableId.startsWith("temp-"));
+
   return (
     <div>
       <BaseSideBar/>
@@ -67,16 +73,14 @@ export default function BasePage() {
         {base && (
           <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
             <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-              <Tabs
-                value={selectedTab}
-                onChange={handleChange}
-                aria-label="table tabs"
-              >
-                {base.tables.map((table, index) => (
-                  <Tab key={table.tableId} label={table.name}/>
-                ))}
-              </Tabs>
-              <Button onClick={() => createTable.mutate({ baseId })}>+ New Table</Button>
+              <TableTabs tables={base.tables} selectedTab={selectedTab} setSelectedTab={setSelectedTab} baseId={base.baseId}/>
+              <Button 
+                onClick={() => createTable.mutate({ baseId })}
+                disabled={isCreateDisabled}
+                sx={{
+                  color: "text.primary"
+                }}
+              >+ New Table</Button>
             </Box>
             {base.tables[selectedTab] && (
               <TableDisplay table={base.tables[selectedTab]} />

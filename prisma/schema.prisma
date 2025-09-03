@@ -91,6 +91,7 @@ model Table {
     tableId    String @id @default(cuid())
     baseId     String
     base       Base @relation(fields: [baseId], references: [baseId], onDelete: Cascade)
+    authorId   String
     
     name       String
     columns    Column[]

@@ -54,7 +54,7 @@ export default function BaseHeader({ base }: BaseCardProps) {
   return (
     <Box 
       className="flex items-center pl-[60px]"
-      sx={{ pl: "60px", borderBottom: "1px solid rgba(0,0,0,0.1)" }}
+      sx={{ pl: "60px", borderBottom: "1px solid rgba(0,0,0,0.1)"}}
     >
       <img src="/default_base_image.png" alt="default base image"/>
       <Button
@@ -64,7 +64,8 @@ export default function BaseHeader({ base }: BaseCardProps) {
         aria-expanded={open ? 'true' : undefined}
         onClick={handleClick}
         sx={{
-          fontWeight: "bold"
+          fontWeight: "bold",
+          color: "text.primary"
         }}
       >{base.name}</Button>
       <Menu
@@ -77,7 +78,7 @@ export default function BaseHeader({ base }: BaseCardProps) {
           },
         }}
       >
-        <MenuItem disableRipple>
+        <MenuItem disableRipple disableTouchRipple>
           <TextField
             variant="standard"
             value={value}

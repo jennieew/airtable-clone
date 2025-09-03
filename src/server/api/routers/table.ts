@@ -30,6 +30,7 @@ export const tableRouter = createTRPCRouter({
       const newTable = await db.table.create({
         data: {
           name: `Table ${base.tableCount + 1}`,
+          authorId: ctx.session.user.id,
           baseId,
         }
       })
@@ -90,4 +91,28 @@ export const tableRouter = createTRPCRouter({
         },
       })
     }),
+
+  deleteTable: protectedProcedure
+    .input(
+      z.object({ tableId: z.string() })
+    )
+    .mutation(async ({ctx, input}) => {
+      const table = await ctx.db.table.findUnique({
+        where: { tableId: input.tableId }
+      })
+
+      if (!table) {
+        throw new Error("Table not found");
+      }
+
+      if (table.authorId !== ctx.session.user.id) {
+        throw new Error("Not authorized to delete this table");
+      }
+
+      await ctx.db.table.delete({
+        where: { tableId: input.tableId }
+      });
+
+      return { success: true, tableId: input.tableId, baseId: table.baseId };
+    })
 })
