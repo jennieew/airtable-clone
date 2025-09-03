@@ -66,7 +66,7 @@ export const tableRouter = createTRPCRouter({
 
         await Promise.all(
           createdColumns.map((col) => {
-            db.cell.create({
+            return db.cell.create({
               data: {
                 rowId: row.rowId,
                 columnId: col.columnId,

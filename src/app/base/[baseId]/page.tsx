@@ -23,8 +23,8 @@ export default function BasePage() {
   };
 
   const createTable = api.table.createTable.useMutation({
-    onSuccess: () => {
-      utils.base.getBase.invalidate({ baseId });
+    onSuccess: async () => {
+      await utils.base.getBase.invalidate({ baseId });
     },
   });
 

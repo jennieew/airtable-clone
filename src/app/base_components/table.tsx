@@ -17,7 +17,7 @@ export default function TableDisplay({ table }: TableComponentProps) {
   // transform table to flat objects
   const [tableData, setTableData] = useState(() => {
     return table.rows.map((row: RowWithRelations) => {
-      const rowObj: Record<string, any> = {};
+      const rowObj: Record<string, string | number> = {};
       table.columns.forEach((col: Column) => {
         const cell = row.values.find((c: Cell) => c.columnId === col.columnId);
         rowObj[col.columnId] = cell?.stringValue ?? cell?.numberValue ?? "";
@@ -32,7 +32,8 @@ export default function TableDisplay({ table }: TableComponentProps) {
     value: string;
   } | null>(null);
 
-  const columnHelper = createColumnHelper<any>();
+  type RowData = Record<string, string | number>;
+  const columnHelper = createColumnHelper<RowData>();
 
   const tableColumns = [
     columnHelper.display({
@@ -40,7 +41,7 @@ export default function TableDisplay({ table }: TableComponentProps) {
       header: '#',
       cell: (info) => info.row.index + 1,
     }),
-    ...table.columns.map((col) =>
+    ...table.columns.map((col: Column) =>
       columnHelper.accessor(col.columnId, {
         header: col.name,
         cell: (info) => {
