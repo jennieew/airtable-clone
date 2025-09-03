@@ -23,6 +23,34 @@ export default function BasePage() {
   };
 
   const createTable = api.table.createTable.useMutation({
+    onMutate: async ({ baseId }) => {
+      // make sure that any outgoing getBase requests dont overwrite
+      await utils.base.getBase.cancel({ baseId });
+
+      const previousBase = utils.base.getBase.getData({ baseId });
+      utils.base.getBase.setData({ baseId }, (old) => {
+        if (!old) return old;
+        return {
+          ...old,
+          tables: [
+            ...old.tables,
+            { 
+              tableId: "temp-id",
+              baseId: old.baseId,
+              name: `Table ${old.tables.length + 1}`, 
+              columns: [], 
+              rows: [] },
+          ],
+        };
+      });
+
+      return { previousBase };
+    },
+    onError: (err, variables, context) => {
+      if (context?.previousBase) {
+        utils.base.getBase.setData({ baseId }, context.previousBase);
+      }
+    },
     onSuccess: async () => {
       await utils.base.getBase.invalidate({ baseId });
     },

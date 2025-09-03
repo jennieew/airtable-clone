@@ -19,7 +19,7 @@ export default function BaseHeader({ base }: BaseCardProps) {
     setAnchorEl(null);
   };
 
-  const utils = api.useContext();
+  const utils = api.useUtils();
   const editBase = api.base.editBase.useMutation({
     onMutate: async ({ baseId, name }) => {
       if (!name) return;
