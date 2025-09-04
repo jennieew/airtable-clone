@@ -55,7 +55,11 @@ export default function BaseHeader({ base }: BaseCardProps) {
   return (
     <Box 
       className="flex items-center pl-[60px]"
-      sx={{ pl: "60px", borderBottom: "1px solid rgba(0,0,0,0.1)"}}
+      sx={{
+        width: "100%",
+        pl: "60px", 
+        borderBottom: "1px solid rgba(0,0,0,0.1)"
+      }}
     >
       <img src="/default_base_image.png" alt="default base image"/>
       <Button

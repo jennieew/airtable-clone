@@ -27,7 +27,7 @@ export const columnRouter = createTRPCRouter({
       if (!table) throw new Error("Table not found");
 
       if (table.authorId !== ctx.session.user.id) {
-        throw new Error("Unauthorized to edit table")
+        throw new Error("Unauthorized to create column");
       }
 
       const newColumn = await db.column.create({
@@ -35,7 +35,7 @@ export const columnRouter = createTRPCRouter({
           authorId: ctx.session.user.id,
           tableId, name, type,
         }
-      })
+      });
 
       return newColumn;
     }),
@@ -86,7 +86,7 @@ export const columnRouter = createTRPCRouter({
         }
 
         if (column.authorId !== ctx.session.user.id) {
-          throw new Error("Unauthorized to edit column")
+          throw new Error("Unauthorized to delete column")
         }
 
         return ctx.db.column.delete({

@@ -98,6 +98,51 @@ export default function TableDisplay({ tableId }: TableComponentProps) {
     getCoreRowModel: getCoreRowModel(),
   });
 
+  // mutation for adding a row
+  const utils = api.useUtils();
+  const addRow = api.row.createRow.useMutation({
+    onMutate: async({ tableId }) => {
+      await utils.table.getTable.cancel({ tableId });
+
+      const previousTable = utils.table.getTable.getData({ tableId });
+      if (!previousTable) {
+        throw new Error("Cannot find table")
+      }
+
+      const tempId = crypto.randomUUID();
+      utils.table.getTable.setData({ tableId }, (old) => {
+        if (!old) return old;
+        const newRow: RowWithRelations = {
+          rowId: tempId,
+          authorId: previousTable.authorId,
+          tableId,
+          values: old.columns.map(col => ({
+            cellId: crypto.randomUUID(),
+            rowId: tempId,
+            columnId: col.columnId,
+            stringValue: col.type === "STRING" ? "" : null,
+            numberValue: col.type === "NUMBER" ? 0 : null,
+          })),
+        };
+
+        return {
+          ...old,
+          rows: [...old.rows, newRow],
+        };
+      });
+
+      return { previousTable, tempId }
+    },
+    onError: (err, variables, context) => {
+      if (context?.previousTable) {
+        utils.table.getTable.setData({ tableId: variables.tableId }, context.previousTable);
+      }
+    },
+    onSuccess: async (newRow, variables, context) => {
+      await utils.table.getTable.invalidate({ tableId: variables.tableId });
+    }
+  });
+
   if (isLoading) return <div>Loading...</div>;
   if (isError || !table) return <div>Table not found</div>;
 
@@ -120,7 +165,10 @@ export default function TableDisplay({ tableId }: TableComponentProps) {
                 </th>
               ))}
               <th>
-                <Button onClick={handleOpenColumnMenu}>+</Button>
+                <Button
+                sx={{color: "black"}}
+                  onClick={handleOpenColumnMenu}
+                >+</Button>
               </th>
             </tr>
           ))}
@@ -145,7 +193,7 @@ export default function TableDisplay({ tableId }: TableComponentProps) {
             </tr>
           ))}
           <tr
-            onClick={() => console.log("to fix")}
+            onClick={() => addRow.mutate({ tableId })}
           >
             <td colSpan={tanstackTable.getAllColumns().length + 1}>
               +
