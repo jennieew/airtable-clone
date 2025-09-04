@@ -14,7 +14,7 @@ export const tableRouter = createTRPCRouter({
       z.object({ baseId: z.string() })
     )
     .mutation(async ({ ctx, input }) => {
-      const { baseId } = input
+      const { baseId } = input;
 
       const base = await ctx.db.base.findUnique({
         where: { baseId },
@@ -45,11 +45,11 @@ export const tableRouter = createTRPCRouter({
       });
 
       const defaultColumns = [
-        { name: "Name", type: ColumnType.STRING },
-        { name: "Notes", type: ColumnType.STRING },
-        { name: "Assignee", type: ColumnType.STRING },
-        { name: "Status", type: ColumnType.STRING },
-        { name: "Attachments", type: ColumnType.STRING },
+        { name: "Name", type: ColumnType.STRING, authorId: ctx.session.user.id },
+        { name: "Notes", type: ColumnType.STRING, authorId: ctx.session.user.id },
+        { name: "Assignee", type: ColumnType.STRING, authorId: ctx.session.user.id },
+        { name: "Status", type: ColumnType.STRING, authorId: ctx.session.user.id },
+        { name: "Attachments", type: ColumnType.STRING, authorId: ctx.session.user.id },
       ];
 
       const createdColumns = await Promise.all(
@@ -62,7 +62,7 @@ export const tableRouter = createTRPCRouter({
 
       for (let i = 0; i < 3; i++) {
         const row = await db.row.create({
-          data: { tableId: newTable.tableId },
+          data: { tableId: newTable.tableId, authorId: ctx.session.user.id },
         });
 
         await Promise.all(
@@ -89,6 +89,7 @@ export const tableRouter = createTRPCRouter({
         where: {
           tableId: input.tableId
         },
+        include: { columns: true, rows: { include: { values: true }}},
       })
     }),
 

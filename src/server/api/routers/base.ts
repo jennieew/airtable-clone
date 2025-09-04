@@ -50,17 +50,16 @@ export const baseRouter = createTRPCRouter({
                         authorId: ctx.session.user.id,
                         columns: {
                             create: [
-                                { name: "Name", type: "STRING" },
-                                { name: "Notes", type: "STRING" },
-                                { name: "Assignee", type: "STRING" },
-                                { name: "Status", type: "STRING" },
-                                { name: "Attachments", type: "STRING" },
+                                { name: "Name", type: "STRING", authorId: ctx.session.user.id },
+                                { name: "Notes", type: "STRING", authorId: ctx.session.user.id },
+                                { name: "Assignee", type: "STRING", authorId: ctx.session.user.id },
+                                { name: "Status", type: "STRING", authorId: ctx.session.user.id },
+                                { name: "Attachments", type: "STRING", authorId: ctx.session.user.id },
                             ],
                         },
                         rows: {
-                            create: [{}, {}, {}],
+                            create: [{authorId: ctx.session.user.id,}, {authorId: ctx.session.user.id,}, {authorId: ctx.session.user.id,}],
                         },
-                        // fields: [],
                     },
                 },
             },
@@ -84,6 +83,18 @@ export const baseRouter = createTRPCRouter({
             })
         )
         .mutation(async ({ ctx, input }) => {
+            const base = await ctx.db.base.findUnique({
+                where: { baseId: input.baseId }
+            });
+            
+            if (!base) {
+                throw new Error("Base not found");
+            }
+
+            if (base.authorId !== ctx.session.user.id) {
+                throw new Error("Unauthorized to edit base")
+            }
+
             return ctx.db.base.update({
                 where: { baseId: input.baseId },
                 data: { name: input.name },

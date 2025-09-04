@@ -83,7 +83,7 @@ export default function BasePage() {
               >+ New Table</Button>
             </Box>
             {base.tables[selectedTab] && (
-              <TableDisplay table={base.tables[selectedTab]} />
+              <TableDisplay tableId={base.tables[selectedTab].tableId} />
             )}
           </Box>
         )}

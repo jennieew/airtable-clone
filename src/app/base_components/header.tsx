@@ -24,7 +24,7 @@ export default function BaseHeader({ base }: BaseCardProps) {
     onMutate: async ({ baseId, name }) => {
       if (!name) return;
       
-      await utils.base.getBase.cancel({ baseId })
+      await utils.base.getBase.cancel({ baseId });
       const previousBase = utils.base.getBase.getData({ baseId });
 
       utils.base.getBase.setData({ baseId }, (old) => old ? { ...old, name } : old);
