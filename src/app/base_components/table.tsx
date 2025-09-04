@@ -4,6 +4,7 @@ import React, { useMemo, useState } from "react";
 import { Button } from "@mui/material";
 import ColumnMenu from "./columnMenu";
 import { api } from "@/utils/api";
+import TableHeader from "./tableHeaders";
 
 type RowWithRelations = Row & { values: Cell[] };
 
@@ -20,7 +21,7 @@ export default function TableDisplay({ tableId }: TableComponentProps) {
   // for creating a new column
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
-  const handleOpenMenu = (event: React.MouseEvent<HTMLButtonElement>) => {
+  const handleOpenColumnMenu = (event: React.MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);
   };
 
@@ -28,9 +29,22 @@ export default function TableDisplay({ tableId }: TableComponentProps) {
     setAnchorEl(null);
   };
 
+  // for renaming/deleting columns
+  const [headerMenuAnchor, setHeaderMenuAnchor] = useState<{
+    columnId: string;
+    anchorEl: HTMLElement;
+  } | null>(null);
+
+  const openHeaderMenu = (event: React.MouseEvent<HTMLElement>, columnId: string) => {
+    setHeaderMenuAnchor({ columnId, anchorEl: event.currentTarget });
+  };
+
+  const closeHeaderMenu = () => setHeaderMenuAnchor(null);
+
   const { data: table, isLoading, isError } = api.table.getTable.useQuery({ tableId });
   const [tableData, setTableData] = useState<Record<string, string | number>[]>([]);
   const columnHelper = createColumnHelper<Record<string, string | number>>();
+  
   // transform table to flat objects
   React.useEffect(() => {
       if (table) {
@@ -50,7 +64,7 @@ export default function TableDisplay({ tableId }: TableComponentProps) {
     const tableColumns = useMemo(() => {
       if (!table) return [];
       return [
-        columnHelper.display({ id: 'rowNumber', header: '#', cell: (info) => info.row.index + 1 }),
+        // columnHelper.display({ id: 'rowNumber', header: '#', cell: (info) => info.row.index + 1 }),
         ...table.columns.map((col) =>
           columnHelper.accessor(col.columnId, {
             header: col.name.trim() === "" ? "Label" : col.name,
@@ -93,8 +107,12 @@ export default function TableDisplay({ tableId }: TableComponentProps) {
         <thead>
           {tanstackTable.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id}>
+              <th>#</th>
               {headerGroup.headers.map((header) => (
-                <th key={header.id}>
+                <th 
+                  key={header.id}
+                  onClick={(e) => openHeaderMenu(e, header.column.id)}
+                >
                   {flexRender(
                     header.column.columnDef.header,
                     header.getContext()
@@ -102,13 +120,13 @@ export default function TableDisplay({ tableId }: TableComponentProps) {
                 </th>
               ))}
               <th>
-                <Button onClick={handleOpenMenu}>+</Button>
+                <Button onClick={handleOpenColumnMenu}>+</Button>
               </th>
             </tr>
           ))}
         </thead>
 
-        <ColumnMenu 
+        <ColumnMenu
           openColumnMenu={Boolean(anchorEl)} 
           anchorEl={anchorEl} 
           onClose={handleCloseMenu} 
@@ -118,6 +136,7 @@ export default function TableDisplay({ tableId }: TableComponentProps) {
         <tbody>
           {tanstackTable.getRowModel().rows.map((row, rowIndex) => (
             <tr key={row.id}>
+              <td>{rowIndex + 1}</td>
               {row.getVisibleCells().map((cell) => (
                 <td key={cell.id}>
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -128,12 +147,14 @@ export default function TableDisplay({ tableId }: TableComponentProps) {
           <tr
             onClick={() => console.log("to fix")}
           >
-            <td colSpan={tanstackTable.getAllColumns().length}>
+            <td colSpan={tanstackTable.getAllColumns().length + 1}>
               +
             </td>
           </tr>
         </tbody>
       </table>
+
+      <TableHeader headerMenuAnchor={headerMenuAnchor} closeHeaderMenu={closeHeaderMenu} tableId={tableId}></TableHeader>
     </div>
   );
 }

@@ -66,5 +66,31 @@ export const columnRouter = createTRPCRouter({
         where: { columnId },
         data: { name, type }
       })
-    })
+    }),
+  
+    deleteColumn: protectedProcedure
+      .input(
+        z.object({ 
+          columnId: z.string(),
+        })
+      )
+      .mutation(async ({ ctx, input }) => {
+        const { columnId } = input;
+
+        const column = await ctx.db.column.findUnique({
+          where: { columnId }
+        });
+
+        if (!column) {
+          throw new Error("Column not found");
+        }
+
+        if (column.authorId !== ctx.session.user.id) {
+          throw new Error("Unauthorized to edit column")
+        }
+
+        return ctx.db.column.delete({
+          where: { columnId },
+        })
+      }),
 })
