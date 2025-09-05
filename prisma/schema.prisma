@@ -84,8 +84,6 @@ model Base {
     tables     Table[]
     tableCount Int @default(0)
 
-    views      View[]
-
     @@index([name])
 }
 
@@ -98,6 +96,9 @@ model Table {
     name       String
     columns    Column[]
     rows       Row[]
+    
+    views      View[]
+    viewCount  Int @default(1)
 }
 
 model Row {
@@ -147,10 +148,10 @@ enum RowHeight {
 
 model View {
     viewId       String @id @default(cuid())
-    baseId       String
-    base         Base @relation(fields: [baseId], references: [baseId], onDelete: Cascade)
+    tableId      String
+    table        Table @relation(fields: [tableId], references: [tableId], onDelete: Cascade)
 
-    name         String @default("Grid View")
+    name         String
     description  String @default("")
     hiddenFields String @default("")
     filters      String @default("")

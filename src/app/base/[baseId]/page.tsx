@@ -45,7 +45,10 @@ export default function BasePage() {
               authorId: old.authorId,
               name: `Table ${previousBase?.tableCount + 1}`, 
               columns: [], 
-              rows: [] },
+              rows: [],
+              views: [],
+              viewCount: 1
+            },
           ],
         };
       });

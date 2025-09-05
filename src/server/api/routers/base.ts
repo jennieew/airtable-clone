@@ -34,6 +34,7 @@ export const baseRouter = createTRPCRouter({
                                     values: true,
                                 }
                             },
+                            views: true,
                         },
                     },
                 },
@@ -45,12 +46,6 @@ export const baseRouter = createTRPCRouter({
         const newBase = await ctx.db.base.create({
             data: {
                 authorId: ctx.session.user.id,
-                views: {
-                    create: {}
-                }
-            },
-            include: {
-                views: true,
             },
         });
         

@@ -70,7 +70,8 @@ export default function BaseHeader({ base }: BaseCardProps) {
         onClick={handleClick}
         sx={{
           fontWeight: "bold",
-          color: "text.primary"
+          color: "text.primary",
+          textTransform: "none"
         }}
       >{base.name}</Button>
       <Menu

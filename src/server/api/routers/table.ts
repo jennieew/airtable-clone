@@ -25,7 +25,11 @@ export const tableRouter = createTRPCRouter({
         where: {
           tableId: input.tableId
         },
-        include: { columns: true, rows: { include: { values: true }}},
+        include: { 
+          columns: true, 
+          rows: { include: { values: true }},
+          views: true,
+        },
       })
     }),
 

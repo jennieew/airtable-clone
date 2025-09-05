@@ -99,8 +99,8 @@ export default function TableTabs({ tables, selectedTab, setSelectedTab, baseId 
             borderLeft: 0,
             borderRight: 0,
             borderTop: 0,
-            borderColor: "primary.main",
-            color: selectedTab === index ? "primary.main" : "text.primary",
+            borderColor: "black",
+            color: selectedTab === index ? "black" : "#50586f",
             backgroundColor: "transparent",
             fontWeight: selectedTab === index ? "bold" : "normal",
           }}

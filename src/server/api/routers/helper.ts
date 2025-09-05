@@ -22,8 +22,16 @@ export async function createDefaultTable(ctx: Context, baseId: string) {
       name: `Table ${base.tableCount + 1}`,
       authorId: session.user.id,
       baseId,
-    }
-  })
+      views: {
+        create: {
+          name: "Grid View",
+        },
+      },
+    },
+    include: {
+      views: true,
+    },
+  });
 
   // increment table count
   await db.base.update({
