@@ -5,6 +5,7 @@ import {
   protectedProcedure,
   publicProcedure,
 } from "@/server/api/trpc";
+import { createDefaultTable } from "./helper";
 
 export const baseRouter = createTRPCRouter({
     // fetch the bases for the currently signed in user
@@ -41,41 +42,20 @@ export const baseRouter = createTRPCRouter({
 
     // create a base
     createBase: protectedProcedure.mutation(async ({ ctx }) => {
-        return ctx.db.base.create({
+        const newBase = await ctx.db.base.create({
             data: {
                 authorId: ctx.session.user.id,
-                tables: {
-                    create: {
-                        name: "Table 1",
-                        authorId: ctx.session.user.id,
-                        columns: {
-                            create: [
-                                { name: "Name", type: "STRING", authorId: ctx.session.user.id },
-                                { name: "Notes", type: "STRING", authorId: ctx.session.user.id },
-                                { name: "Assignee", type: "STRING", authorId: ctx.session.user.id },
-                                { name: "Status", type: "STRING", authorId: ctx.session.user.id },
-                                { name: "Attachments", type: "STRING", authorId: ctx.session.user.id },
-                            ],
-                        },
-                        rows: {
-                            create: [{authorId: ctx.session.user.id,}, {authorId: ctx.session.user.id,}, {authorId: ctx.session.user.id,}],
-                        },
-                    },
-                },
                 views: {
                     create: {}
                 }
             },
             include: {
-                tables: {
-                    include: {
-                        columns: true,
-                        rows: true,
-                    },
-                },
                 views: true,
             },
         });
+        
+        await createDefaultTable(ctx, newBase.baseId);
+        return newBase;
     }),
 
     // edit a base

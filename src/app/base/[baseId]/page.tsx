@@ -2,15 +2,12 @@
 
 import BaseHeader from "@/app/base_components/header";
 import BaseSideBar from "@/app/base_components/sideBar";
-import TableDisplay from "@/app/table_components/table";
 import { useParams } from "next/navigation";
 import { api } from "@/utils/api";
 
 import { useState } from "react";
 import { Box, Button } from "@mui/material";
 import TableTabs from "@/app/table_components/tableTabs";
-import TableHeaderBar from "@/app/table_components/header";
-import TableSideBar from "@/app/table_components/sideBar";
 import TablePage from "@/app/table_components/tablePage";
 
 export default function BasePage() {
@@ -26,12 +23,15 @@ export default function BasePage() {
     setSelectedTab(newValue);
   };
 
+  // create a new table
   const createTable = api.table.createTable.useMutation({
     onMutate: async ({ baseId }) => {
       // make sure that any outgoing getBase requests dont overwrite
       await utils.base.getBase.cancel({ baseId });
 
+      const tempId = crypto.randomUUID();
       const previousBase = utils.base.getBase.getData({ baseId });
+
       utils.base.getBase.setData({ baseId }, (old) => {
         if (!old || !previousBase) return old;
 
@@ -40,7 +40,7 @@ export default function BasePage() {
           tables: [
             ...old.tables,
             { 
-              tableId: `temp-${Date.now()}`,
+              tableId: tempId,
               baseId: old.baseId,
               authorId: old.authorId,
               name: `Table ${previousBase?.tableCount + 1}`, 
@@ -66,7 +66,7 @@ export default function BasePage() {
   if (!base) return <p>Base not found</p>;
 
   // if a table is being created, disable create new table
-  const isCreateDisabled = createTable.status === "pending" || base?.tables.some(t => t.tableId.startsWith("temp-"));
+  const isCreateDisabled = createTable.status === "pending";
 
   return (
     <div>
@@ -86,11 +86,6 @@ export default function BasePage() {
               >+ New Table</Button>
             </Box>
             <TablePage table={base.tables[selectedTab]}/>
-            {/* <Box sx={{ display: "flex"}}>
-                {base.tables[selectedTab] && (
-                    <TableDisplay tableId={base.tables[selectedTab].tableId} />
-                )}
-            </Box> */}
           </Box>
         )}
       </div>

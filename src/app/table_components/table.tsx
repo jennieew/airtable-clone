@@ -2,7 +2,7 @@ import { createColumnHelper, flexRender, getCoreRowModel, useReactTable } from "
 import type { Cell, Column, Row, Table } from "@prisma/client";
 import React, { useMemo, useState } from "react";
 import { Button } from "@mui/material";
-import ColumnMenu from "../base_components/columnMenu";
+import ColumnMenu from "./columnMenu";
 import { api } from "@/utils/api";
 import TableHeader from "./tableHeaders";
 
@@ -44,59 +44,6 @@ export default function TableDisplay({ tableId }: TableComponentProps) {
   const { data: table, isLoading, isError } = api.table.getTable.useQuery({ tableId });
   const [tableData, setTableData] = useState<Record<string, string | number>[]>([]);
   const columnHelper = createColumnHelper<Record<string, string | number>>();
-  
-  // transform table to flat objects
-  React.useEffect(() => {
-      if (table) {
-        setTableData(
-          table.rows.map((row) => {
-            const rowObj: Record<string, string | number> = {};
-            table.columns.forEach((col) => {
-              const cell = row.values.find((c) => c.columnId === col.columnId);
-              rowObj[col.columnId] = cell?.stringValue ?? cell?.numberValue ?? "";
-            });
-            return rowObj;
-          })
-        );
-      }
-    }, [table]);
-
-    const tableColumns = useMemo(() => {
-      if (!table) return [];
-      return [
-        // columnHelper.display({ id: 'rowNumber', header: '#', cell: (info) => info.row.index + 1 }),
-        ...table.columns.map((col) =>
-          columnHelper.accessor(col.columnId, {
-            header: col.name.trim() === "" ? "Label" : col.name,
-            cell: (info) => {
-              const value = info.getValue();
-              return (
-                <input
-                  value={value || ""}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    setTableData((prev) => {
-                      const newData = [...prev];
-                      const row = newData[info.row.index];
-                      if (row) {
-                        row[col.columnId] = val;
-                      }
-                      return newData;
-                    });
-                  }}
-                />
-              );
-            },
-          })
-        ),
-      ];
-    }, [table?.columns]);
-
-  const tanstackTable = useReactTable({
-    data: tableData,
-    columns: tableColumns,
-    getCoreRowModel: getCoreRowModel(),
-  });
 
   // mutation for adding a row
   const utils = api.useUtils();
@@ -141,6 +88,120 @@ export default function TableDisplay({ tableId }: TableComponentProps) {
     onSuccess: async (newRow, variables, context) => {
       await utils.table.getTable.invalidate({ tableId: variables.tableId });
     }
+  });
+
+  const editCell = api.cell.editCell.useMutation({
+    onMutate: async ({ cellId, stringValue, numberValue }) => {
+      // cancel any ongoing fetch
+      await utils.table.getTable.cancel({ tableId });
+
+      // get current table data
+      const previousTable = utils.table.getTable.getData({ tableId });
+      const previousCell = utils.cell.getCell.getData({ cellId });
+
+      // optimistically update
+      utils.table.getTable.setData({ tableId }, (old) => {
+        if (!old) return old;
+        return {
+          ...old,
+          rows: old.rows.map((row) =>
+            row.rowId === previousCell?.rowId
+              ? {
+                  ...row,
+                  values: row.values.map((cell) => {
+                    if (cell.columnId !== previousCell.columnId) return cell;
+
+                    return {
+                      ...cell,
+                      stringValue: stringValue ?? null,
+                      numberValue: numberValue ?? null,
+                    }
+                  }),
+                }
+              : row
+          ),
+        };
+      });
+
+      // return previous data so it can be rolled back in onError
+      return { previousTable };
+    },
+
+    onError: (err, variables, context) => {
+      if (context?.previousTable) {
+        utils.table.getTable.setData({ tableId }, context.previousTable);
+      }
+    },
+    onSettled: async () => {
+      await utils.table.getTable.invalidate({ tableId });
+    },
+  });
+  
+  // transform table to flat objects
+  React.useEffect(() => {
+      if (table) {
+        setTableData(
+          table.rows.map((row) => {
+            const rowObj: Record<string, string | number> = {};
+            table.columns.forEach((col) => {
+              const cell = row.values.find((c) => c.columnId === col.columnId);
+              rowObj[col.columnId] = cell?.stringValue ?? cell?.numberValue ?? "";
+            });
+            return rowObj;
+          })
+        );
+      }
+    }, [table]);
+
+    // create the columns for the tables, making them input cells
+    const tableColumns = useMemo(() => {
+      if (!table) return [];
+      return [
+        ...table.columns.map((col) =>
+          columnHelper.accessor(col.columnId, {
+            header: col.name.trim() === "" ? "Label" : col.name,
+            cell: (info) => {
+              const value = tableData[info.row.index]?.[info.column.id] ?? "";
+
+              return (
+                <input
+                  value={value}
+                  type={col.type === "NUMBER" ? "number" : "text"}
+                  onChange={(e) => {
+                    const val = col.type === "NUMBER" ? Number(e.target.value) : e.target.value;
+
+                    setTableData((prev) => {
+                      const newData = [...prev];
+                      const row = newData[info.row.index];
+                      if (row) row[info.column.id] = val;
+                      return newData;
+                    });
+                  }}
+
+                  onBlur={() => {
+                    const cell = table.rows[info.row.index]?.values.find(c => c.columnId === info.column.id);
+                    const val = tableData[info.row.index]?.[info.column.id] ?? null;
+
+                    if (cell) {
+                      editCell.mutate({
+                        cellId: cell.cellId,
+                        stringValue: col.type === "STRING" ? val as string : null,
+                        numberValue: col.type === "NUMBER" ? val as number : null,
+                      });
+                    }
+                  }}
+                />
+              );
+            },
+          })
+        ),
+      ];
+    }, [table?.columns]);
+
+  const tanstackTable = useReactTable({
+    data: tableData,
+    columns: tableColumns,
+    getCoreRowModel: getCoreRowModel(),
   });
 
   if (isLoading) return <div>Loading...</div>;

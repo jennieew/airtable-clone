@@ -18,6 +18,7 @@ export const rowRouter = createTRPCRouter({
       const { tableId } = input;
       const table = await ctx.db.table.findUnique({
         where: { tableId },
+        include: { columns: true }
       });
 
       if (!table) throw new Error("Table not found");
@@ -29,9 +30,21 @@ export const rowRouter = createTRPCRouter({
       const newRow = await db.row.create({
         data: {
           authorId: ctx.session.user.id,
-          tableId
-        }
+          tableId,
+        },
       });
+
+      // create cells for existing columns
+      if (table.columns.length > 0) {
+        await ctx.db.cell.createMany({
+          data: table.columns.map((col) => ({
+            rowId: newRow.rowId,
+            columnId: col.columnId,
+            stringValue: null,
+            numberValue: null,
+          })),
+        });
+      }
 
       return newRow;
     }),

@@ -7,79 +7,15 @@ import {
 } from "@/server/api/trpc";
 import { db } from "@/server/db";
 import { ColumnType } from "@prisma/client";
+import { createDefaultTable } from "./helper";
 
 export const tableRouter = createTRPCRouter({
   createTable: protectedProcedure
-    .input(
-      z.object({ baseId: z.string() })
-    )
+    .input(z.object({ baseId: z.string() }))
     .mutation(async ({ ctx, input }) => {
       const { baseId } = input;
-
-      const base = await ctx.db.base.findUnique({
-        where: { baseId },
-      });
-
-      if (!base) throw new Error("Base not found");
-
-      // check the owner of the base
-      if (base.authorId !== ctx.session.user.id) {
-        throw new Error("Unauthorized");
-      }
-
-      const newTable = await db.table.create({
-        data: {
-          name: `Table ${base.tableCount + 1}`,
-          authorId: ctx.session.user.id,
-          baseId,
-        }
-      })
-
-      await db.base.update({
-        where: { baseId },
-        data: {
-          tableCount: {
-            increment: 1,
-          },
-        },
-      });
-
-      const defaultColumns = [
-        { name: "Name", type: ColumnType.STRING, authorId: ctx.session.user.id },
-        { name: "Notes", type: ColumnType.STRING, authorId: ctx.session.user.id },
-        { name: "Assignee", type: ColumnType.STRING, authorId: ctx.session.user.id },
-        { name: "Status", type: ColumnType.STRING, authorId: ctx.session.user.id },
-        { name: "Attachments", type: ColumnType.STRING, authorId: ctx.session.user.id },
-      ];
-
-      const createdColumns = await Promise.all(
-        defaultColumns.map((col) => {
-          return db.column.create({
-            data: { tableId: newTable.tableId, ...col }
-          })
-        })
-      )
-
-      for (let i = 0; i < 3; i++) {
-        const row = await db.row.create({
-          data: { tableId: newTable.tableId, authorId: ctx.session.user.id },
-        });
-
-        await Promise.all(
-          createdColumns.map((col) => {
-            return db.cell.create({
-              data: {
-                rowId: row.rowId,
-                columnId: col.columnId,
-              },
-            })
-          })
-        );
-      }
-      
-      return newTable;
+      return createDefaultTable(ctx, baseId);
     }),
-
   getTable: protectedProcedure
     .input(
       z.object({ tableId: z.string() })

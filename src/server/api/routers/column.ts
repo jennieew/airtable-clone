@@ -22,6 +22,7 @@ export const columnRouter = createTRPCRouter({
 
       const table = await ctx.db.table.findUnique({
         where: { tableId },
+        include: { rows: true }
       });
 
       if (!table) throw new Error("Table not found");
@@ -36,6 +37,18 @@ export const columnRouter = createTRPCRouter({
           tableId, name, type,
         }
       });
+
+      // when adding a new column, create cells for each row
+      if (table.rows.length > 0) {
+        await ctx.db.cell.createMany({
+          data: table.rows.map((row) => ({
+            rowId: row.rowId,
+            columnId: newColumn.columnId,
+            stringValue: null,
+            numberValue: null,
+          })),
+        });
+      }
 
       return newColumn;
     }),

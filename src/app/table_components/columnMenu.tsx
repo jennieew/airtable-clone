@@ -36,6 +36,19 @@ export default function ColumnMenu({ openColumnMenu, anchorEl, onClose, tableId 
               authorId: old.authorId
             }
           ],
+          rows: old.rows.map((row) => ({
+            ...row,
+            values : [
+              ...row.values,
+              {
+                cellId: crypto.randomUUID(),
+                rowId: row.rowId,
+                columnId: tempId,
+                stringValue: type === "STRING" ? "" : null,
+                numberValue: type === "NUMBER" ? 0 : null,
+              }
+            ],
+          })),
         }
       : old
       );

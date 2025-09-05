@@ -82,7 +82,7 @@ model Base {
     author     User @relation(fields:[authorId], references: [id])
 
     tables     Table[]
-    tableCount Int @default(1)
+    tableCount Int @default(0)
 
     views      View[]
 
