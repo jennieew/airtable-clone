@@ -1,6 +1,8 @@
 import { Box, Button, IconButton, TextField } from "@mui/material";
 import { useEffect, useRef, useState } from "react";
 import MenuIcon from '@mui/icons-material/Menu';
+import FilterMenu from "../view_components/filterMenu";
+import SortMenu from "../view_components/sortMenu";
 
 interface HeaderProps {
   openSidebar: boolean;
@@ -14,6 +16,20 @@ export default function TableHeaderBar({ openSidebar, setOpenSideBar, setHovered
     const [viewName, setViewName] = useState("Grid View"); // update to view name!!
 
     const inputRef = useRef<HTMLInputElement>(null);
+
+    const [filterAnchor, setFilterAnchor] = useState<null | HTMLElement>(null);
+    const [openFilterMenu, setOpenFilterMenu] = useState(false);
+    const handleCloseFilterMenu = () => {
+        setFilterAnchor(null);
+        setOpenFilterMenu(false);
+    }
+
+    const [sortAnchor, setSortAnchor] = useState<null | HTMLElement>(null);
+    const [openSortMenu, setOpenSortMenu] = useState(false);
+    const handleCloseSortMenu = () => {
+        setSortAnchor(null);
+        setOpenSortMenu(false);
+    }
 
     // highlight the view name when double clicked
     useEffect(() => {
@@ -54,13 +70,22 @@ export default function TableHeaderBar({ openSidebar, setOpenSideBar, setHovered
 
             <div>
                 <Button sx={{ textTransform: "none", color: "black" }}>Hide Fields</Button>
-                <Button sx={{ textTransform: "none", color: "black" }}>Filter</Button>
+                <Button 
+                    sx={{ textTransform: "none", color: "black" }}
+                    onClick={() => setOpenFilterMenu(!openFilterMenu)}
+                >Filter</Button>
                 <Button sx={{ textTransform: "none", color: "black" }}>Group</Button>
-                <Button sx={{ textTransform: "none", color: "black" }}>Sort</Button>
+                <Button 
+                    sx={{ textTransform: "none", color: "black" }}
+                    onClick={() => setOpenSortMenu(!openSortMenu)}
+                >Sort</Button>
                 <Button sx={{ textTransform: "none", color: "black" }}>Color</Button>
                 <Button sx={{ textTransform: "none", color: "black" }}>Row height</Button>
                 <Button sx={{ textTransform: "none", color: "black" }}>Share and sync</Button>
             </div>
+
+            <FilterMenu filterAnchor={filterAnchor} openFilterMenu={openFilterMenu} onClose={handleCloseFilterMenu} viewId={""}/>
+            <SortMenu sortAnchor={sortAnchor} openSortMenu={openSortMenu} onClose={handleCloseSortMenu} viewId={""}/>
         </Box>
     )
 }

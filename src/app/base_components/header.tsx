@@ -2,6 +2,7 @@ import { Box, Button, Menu, MenuItem, TextField } from "@mui/material";
 import type { Base } from "@prisma/client";
 import React, { useState } from "react";
 import { api } from "@/utils/api";
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 
 type BaseCardProps = {
   base: Base;
@@ -73,7 +74,7 @@ export default function BaseHeader({ base }: BaseCardProps) {
           color: "text.primary",
           textTransform: "none"
         }}
-      >{base.name}</Button>
+      >{base.name} <KeyboardArrowDownIcon/> </Button>
       <Menu
         anchorEl={anchorEl}
         open={open}
