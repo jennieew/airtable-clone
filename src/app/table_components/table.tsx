@@ -2,7 +2,7 @@ import { createColumnHelper, flexRender, getCoreRowModel, useReactTable } from "
 import type { Cell, Column, Row, Table } from "@prisma/client";
 import React, { useMemo, useState } from "react";
 import { Button } from "@mui/material";
-import ColumnMenu from "./columnMenu";
+import ColumnMenu from "../base_components/columnMenu";
 import { api } from "@/utils/api";
 import TableHeader from "./tableHeaders";
 
@@ -192,9 +192,7 @@ export default function TableDisplay({ tableId }: TableComponentProps) {
               ))}
             </tr>
           ))}
-          <tr
-            onClick={() => addRow.mutate({ tableId })}
-          >
+          <tr onClick={() => addRow.mutate({ tableId })} >
             <td colSpan={tanstackTable.getAllColumns().length + 1}>
               +
             </td>

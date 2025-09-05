@@ -2,13 +2,16 @@
 
 import BaseHeader from "@/app/base_components/header";
 import BaseSideBar from "@/app/base_components/sideBar";
-import TableDisplay from "@/app/base_components/table";
+import TableDisplay from "@/app/table_components/table";
 import { useParams } from "next/navigation";
 import { api } from "@/utils/api";
 
 import { useState } from "react";
 import { Box, Button } from "@mui/material";
-import TableTabs from "@/app/base_components/tableTabs";
+import TableTabs from "@/app/table_components/tableTabs";
+import TableHeaderBar from "@/app/table_components/header";
+import TableSideBar from "@/app/table_components/sideBar";
+import TablePage from "@/app/table_components/tablePage";
 
 export default function BasePage() {
   const [selectedTab, setSelectedTab] = useState(0);
@@ -82,9 +85,12 @@ export default function BasePage() {
                 }}
               >+ New Table</Button>
             </Box>
-            {base.tables[selectedTab] && (
-              <TableDisplay tableId={base.tables[selectedTab].tableId} />
-            )}
+            <TablePage table={base.tables[selectedTab]}/>
+            {/* <Box sx={{ display: "flex"}}>
+                {base.tables[selectedTab] && (
+                    <TableDisplay tableId={base.tables[selectedTab].tableId} />
+                )}
+            </Box> */}
           </Box>
         )}
       </div>

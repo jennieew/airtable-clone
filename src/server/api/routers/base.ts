@@ -62,6 +62,9 @@ export const baseRouter = createTRPCRouter({
                         },
                     },
                 },
+                views: {
+                    create: {}
+                }
             },
             include: {
                 tables: {
@@ -70,6 +73,7 @@ export const baseRouter = createTRPCRouter({
                         rows: true,
                     },
                 },
+                views: true,
             },
         });
     }),

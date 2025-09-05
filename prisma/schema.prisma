@@ -75,14 +75,16 @@ model VerificationToken {
 }
 
 model Base {
-    baseId    String @id @default(cuid())
-    name      String @default("untitled base")
-    createdAt DateTime @default(now())
-    authorId  String
-    author    User @relation(fields:[authorId], references: [id])
+    baseId     String @id @default(cuid())
+    name       String @default("Untitled base")
+    createdAt  DateTime @default(now())
+    authorId   String
+    author     User @relation(fields:[authorId], references: [id])
 
-    tables    Table[]
+    tables     Table[]
     tableCount Int @default(1)
+
+    views      View[]
 
     @@index([name])
 }
@@ -124,8 +126,8 @@ model Column {
 }
 
 model Cell {
-    cellId String @id @default(cuid())
-    rowId String
+    cellId   String @id @default(cuid())
+    rowId    String
     row      Row      @relation(fields: [rowId], references: [rowId], onDelete: Cascade)
 
     columnId String
@@ -134,4 +136,26 @@ model Cell {
     // store either number or string
     stringValue String? 
     numberValue Float?
+}
+
+enum RowHeight {
+  SHORT
+  MEDIUM
+  TALL
+  EXTRA_TALL
+}
+
+model View {
+    viewId       String @id @default(cuid())
+    baseId       String
+    base         Base @relation(fields: [baseId], references: [baseId], onDelete: Cascade)
+
+    name         String @default("Grid View")
+    description  String @default("")
+    hiddenFields String @default("")
+    filters      String @default("")
+    groupBy      String @default("")
+    sort         String @default("")
+    color        String @default("")
+    rowHeight    RowHeight @default(SHORT)
 }
