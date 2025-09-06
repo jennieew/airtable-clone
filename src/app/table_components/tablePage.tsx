@@ -25,11 +25,11 @@ export default function TablePage({ table }: TablePageProps) {
 
     return (
         <Box sx={{ display: "flex", flexDirection: "column"}}>
-            <TableHeaderBar openSidebar={openSidebar} setOpenSideBar={setOpenSideBar} setHovered={setHovered}/>
+            <TableHeaderBar openSidebar={openSidebar} setOpenSideBar={setOpenSideBar} setHovered={setHovered} view={table.views[table.viewIndex]!} table={table}/>
             <Box sx={{ display: "flex", flex: 1}}>
-                <TableSideBar openSidebar={openSidebar} setOpenSideBar={setOpenSideBar} hovered={hovered} table={table}/>
+                <TableSideBar openSidebar={openSidebar} setOpenSideBar={setOpenSideBar} hovered={hovered} setHovered={setHovered} table={table}/>
                 {table && (
-                    <TableDisplay tableId={table.tableId} />
+                    <TableDisplay tableId={table.tableId} view={table.views[table.viewIndex]!}/>
                 )}
             </Box>
         </Box>

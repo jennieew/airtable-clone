@@ -19,10 +19,6 @@ export default function BasePage() {
   // get base
   const { data: base, isLoading } = api.base.getBase.useQuery({ baseId });
 
-  const handleChange = (_event: React.SyntheticEvent, newValue: number) => {
-    setSelectedTab(newValue);
-  };
-
   // create a new table
   const createTable = api.table.createTable.useMutation({
     onMutate: async ({ baseId }) => {
@@ -47,7 +43,8 @@ export default function BasePage() {
               columns: [], 
               rows: [],
               views: [],
-              viewCount: 1
+              viewCount: 1,
+              viewIndex: 0,
             },
           ],
         };
@@ -65,6 +62,7 @@ export default function BasePage() {
     },
   });
 
+  // loading the base data
   if (isLoading) return <p>Loading...</p>;
   if (!base) return <p>Base not found</p>;
 

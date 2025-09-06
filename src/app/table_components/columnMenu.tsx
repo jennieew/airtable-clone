@@ -31,6 +31,9 @@ export default function ColumnMenu({ openColumnMenu, anchorEl, onClose, tableId 
             { 
               columnId: tempId, 
               name: columnName,
+              order: old.columns.length > 0 
+                ? Math.max(...old.columns.map(c => c.order)) + 10 
+                : 0,
               type: type as ColumnType, 
               tableId,
               authorId: old.authorId

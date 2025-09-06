@@ -10,6 +10,7 @@ import BaseCard from "../home_components/base";
 export default function DashboardPage() {
   const [sidebarOpen, setSideBarOpen] = useState(true);
 
+  // get all the user's bases
   const { data, isLoading, error } = api.base.getUserBases.useQuery();
 
   return (

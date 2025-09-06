@@ -27,10 +27,16 @@ export const rowRouter = createTRPCRouter({
         throw new Error("Unauthorized to add row");
       }
 
+      const last = await ctx.db.row.findFirst({
+        where: { tableId },
+        orderBy: { order: "desc" },
+      })
+
       const newRow = await db.row.create({
         data: {
           authorId: ctx.session.user.id,
           tableId,
+          order: last ? last.order + 10 : 0,
         },
       });
 

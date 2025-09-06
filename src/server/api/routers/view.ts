@@ -6,6 +6,7 @@ import {
   publicProcedure,
 } from "@/server/api/trpc";
 import { db } from "@/server/db";
+import type { FilterCondition } from "./helper";
 
 export const viewRouter = createTRPCRouter({
   getViews: protectedProcedure
@@ -39,19 +40,10 @@ export const viewRouter = createTRPCRouter({
         throw new Error("Unauthorized");
       }
 
-      let name;
-      if (!input.name) {
-        if (table.viewCount === 1) {
-          name = "Grid View"
-        } else {
-          name = `Grid ${table.viewCount + 1}`
-        }
-      }
-
       const newView = await db.view.create({
         data: {
           tableId: input.tableId,
-          name: input.name ?? "Grid View",
+          name: input.name ?? `Grid ${table.viewCount + 1}`,
         },
       });
 
@@ -61,9 +53,39 @@ export const viewRouter = createTRPCRouter({
           viewCount: {
             increment: 1,
           },
+          viewIndex: table.viewCount,
         },
       });
 
       return newView;
     }),
+    addFilter: protectedProcedure
+      .input(z.object({
+        viewId: z.string(),
+        newFilter: z.object({
+          logical: z.optional(z.enum(["and", "or", "where"])),
+          column: z.string(),
+          operator: z.string(),
+          value: z.union([z.string(), z.number()]),
+        }),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const view = await ctx.db.view.findUnique({
+          where: { viewId: input.viewId }
+        })
+
+        if (!view) throw new Error("View not found");
+
+        const existingFilters = ((view.filters as unknown) as FilterCondition[]) || [];
+        const updatedFilters = [...existingFilters, input.newFilter];
+        
+        await db.view.update({
+          where: { viewId: input.viewId },
+          data: {
+            filters: updatedFilters,
+          },
+        });
+
+        return updatedFilters
+      }),
 })

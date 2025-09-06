@@ -75,20 +75,20 @@ model VerificationToken {
 }
 
 model Base {
-    baseId     String @id @default(cuid())
-    name       String @default("Untitled base")
+    baseId     String   @id @default(cuid())
+    name       String   @default("Untitled base")
     createdAt  DateTime @default(now())
     authorId   String
     author     User @relation(fields:[authorId], references: [id])
 
     tables     Table[]
-    tableCount Int @default(0)
+    tableCount Int  @default(0)
 
     @@index([name])
 }
 
 model Table {
-    tableId    String @id @default(cuid())
+    tableId    String   @id @default(cuid())
     baseId     String
     base       Base @relation(fields: [baseId], references: [baseId], onDelete: Cascade)
     authorId   String
@@ -98,14 +98,16 @@ model Table {
     rows       Row[]
     
     views      View[]
-    viewCount  Int @default(1)
+    viewCount  Int  @default(1)
+    viewIndex  Int  @default(0)
 }
 
 model Row {
     rowId    String @id @default(cuid())
     tableId  String
     authorId String
-    table    Table @relation(fields: [tableId], references: [tableId], onDelete: Cascade)
+    order    Int    @default(0)
+    table    Table  @relation(fields: [tableId], references: [tableId], onDelete: Cascade)
 
     values  Cell[]
 }
@@ -119,9 +121,10 @@ model Column {
     columnId String @id @default(cuid())
     name     String
     type     ColumnType
+    order    Int    @default(0)
     tableId  String
     authorId String
-    table    Table @relation(fields: [tableId], references: [tableId], onDelete: Cascade)
+    table    Table  @relation(fields: [tableId], references: [tableId], onDelete: Cascade)
 
     values   Cell[]
 }
@@ -129,10 +132,10 @@ model Column {
 model Cell {
     cellId   String @id @default(cuid())
     rowId    String
-    row      Row      @relation(fields: [rowId], references: [rowId], onDelete: Cascade)
+    row      Row    @relation(fields: [rowId], references: [rowId], onDelete: Cascade)
 
     columnId String
-    column   Column   @relation(fields: [columnId], references: [columnId], onDelete: Cascade)
+    column   Column @relation(fields: [columnId], references: [columnId], onDelete: Cascade)
 
     // store either number or string
     stringValue String? 
@@ -149,12 +152,12 @@ enum RowHeight {
 model View {
     viewId       String @id @default(cuid())
     tableId      String
-    table        Table @relation(fields: [tableId], references: [tableId], onDelete: Cascade)
+    table        Table  @relation(fields: [tableId], references: [tableId], onDelete: Cascade)
 
     name         String
     description  String @default("")
     hiddenFields String @default("")
-    filters      String @default("")
+    filters      Json   @default("[]")
     groupBy      String @default("")
     sort         String @default("")
     color        String @default("")

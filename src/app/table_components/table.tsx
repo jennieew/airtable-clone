@@ -1,5 +1,5 @@
 import { createColumnHelper, flexRender, getCoreRowModel, useReactTable } from "@tanstack/react-table";
-import type { Cell, Column, Row, Table } from "@prisma/client";
+import type { Cell, Column, Row, Table, View } from "@prisma/client";
 import React, { useEffect, useMemo, useState } from "react";
 import { Button } from "@mui/material";
 import ColumnMenu from "./columnMenu";
@@ -16,9 +16,10 @@ type TableWithRelations = Table & {
 
 type TableComponentProps = {
   tableId: string;
+  view: View;
 };
 
-export default function TableDisplay({ tableId }: TableComponentProps) {
+export default function TableDisplay({ tableId, view }: TableComponentProps) {
   // for creating a new column
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
@@ -64,6 +65,9 @@ export default function TableDisplay({ tableId }: TableComponentProps) {
           rowId: tempId,
           authorId: previousTable.authorId,
           tableId,
+          order: old.rows.length > 0 
+            ? Math.max(...old.columns.map(c => c.order)) + 10 
+            : 0,
           values: old.columns.map(col => ({
             cellId: crypto.randomUUID(),
             rowId: tempId,
@@ -91,6 +95,7 @@ export default function TableDisplay({ tableId }: TableComponentProps) {
     }
   });
 
+  // mutation for editing cells
   const editCell = api.cell.editCell.useMutation({
     onMutate: async ({ cellId, stringValue, numberValue }) => {
       // cancel any ongoing fetch
@@ -120,6 +125,8 @@ export default function TableDisplay({ tableId }: TableComponentProps) {
       await utils.cell.getCell.invalidate({ cellId: variables.cellId });
     },
   });
+
+  // filters on the view!!
   
   // transform table to flat objects
   useEffect(() => {

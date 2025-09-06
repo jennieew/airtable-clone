@@ -3,17 +3,27 @@ import { useEffect, useRef, useState } from "react";
 import MenuIcon from '@mui/icons-material/Menu';
 import FilterMenu from "../view_components/filterMenu";
 import SortMenu from "../view_components/sortMenu";
+import type { Cell, Column, Row, Table, View } from "@prisma/client";
+
+type RowWithRelations = Row & { values: Cell[] };
+
+type TableWithRelations = Table & {
+  columns: Column[];
+  rows: RowWithRelations[];
+  views: View[];
+};
 
 interface HeaderProps {
   openSidebar: boolean;
   setOpenSideBar: (open: boolean) => void;
   setHovered: (open: boolean) => void;
-//   viewId: string;
+  view: View;
+  table: TableWithRelations;
 }
 
-export default function TableHeaderBar({ openSidebar, setOpenSideBar, setHovered }: HeaderProps) {
+export default function TableHeaderBar({ openSidebar, setOpenSideBar, setHovered, view, table }: HeaderProps) {
     const [isEditingViewName, setIsEditingViewName] = useState(false);
-    const [viewName, setViewName] = useState("Grid View"); // update to view name!!
+    const [viewName, setViewName] = useState(view.name); // update to view name!!
 
     const inputRef = useRef<HTMLInputElement>(null);
 
@@ -72,7 +82,10 @@ export default function TableHeaderBar({ openSidebar, setOpenSideBar, setHovered
                 <Button sx={{ textTransform: "none", color: "black" }}>Hide Fields</Button>
                 <Button 
                     sx={{ textTransform: "none", color: "black" }}
-                    onClick={() => setOpenFilterMenu(!openFilterMenu)}
+                    onClick={(e) => {
+                        setFilterAnchor(e.currentTarget);
+                        setOpenFilterMenu(!openFilterMenu);
+                    }}
                 >Filter</Button>
                 <Button sx={{ textTransform: "none", color: "black" }}>Group</Button>
                 <Button 
@@ -84,7 +97,7 @@ export default function TableHeaderBar({ openSidebar, setOpenSideBar, setHovered
                 <Button sx={{ textTransform: "none", color: "black" }}>Share and sync</Button>
             </div>
 
-            <FilterMenu filterAnchor={filterAnchor} openFilterMenu={openFilterMenu} onClose={handleCloseFilterMenu} viewId={""}/>
+            <FilterMenu filterAnchor={filterAnchor} openFilterMenu={openFilterMenu} onClose={handleCloseFilterMenu} view={view} table={table}/>
             <SortMenu sortAnchor={sortAnchor} openSortMenu={openSortMenu} onClose={handleCloseSortMenu} viewId={""}/>
         </Box>
     )

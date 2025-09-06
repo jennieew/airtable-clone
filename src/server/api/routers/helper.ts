@@ -76,3 +76,12 @@ export async function createDefaultTable(ctx: Context, baseId: string) {
 
   return newTable;
 }
+
+export const OPERATORS = ["contains", "does not contain", "is", "is not", "is empty", "is not empty"] as const;
+export type Operator = typeof OPERATORS[number];
+export interface FilterCondition {
+  logical?: "and" | "or" | "where";
+  column: string;
+  operator: Operator;
+  value: string | number;
+}

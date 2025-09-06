@@ -7,6 +7,7 @@ interface SideBarProps {
   openSidebar: boolean;
   setOpenSideBar: (open: boolean) => void;
   hovered: boolean;
+  setHovered: (open: boolean) => void;
   table: TableWithRelations | undefined;
 }
 
@@ -18,7 +19,7 @@ type TableWithRelations = Table & {
   views: View[];
 };
 
-export default function TableSideBar({ openSidebar, setOpenSideBar, hovered, table }: SideBarProps) {
+export default function TableSideBar({ openSidebar, setOpenSideBar, hovered, setHovered, table }: SideBarProps) {
     const toggleSidebar = () => setOpenSideBar(!openSidebar);
     const isOpen = openSidebar || hovered;
     const utils = api.useUtils();
@@ -31,9 +32,9 @@ export default function TableSideBar({ openSidebar, setOpenSideBar, hovered, tab
 
             const tempId = crypto.randomUUID();
             const newViewTemp = {
-                viewId: tempId,           // temporary ID
-                tableId: table.tableId,   // link to the table
-                name: name ?? `Grid ${table.viewCount + 1}`,        // or input name
+                viewId: tempId,
+                tableId: table.tableId,
+                name: name ?? `Grid ${table.viewCount + 1}`,
                 description: "",
                 hiddenFields: "",
                 filters: "",
@@ -68,6 +69,8 @@ export default function TableSideBar({ openSidebar, setOpenSideBar, hovered, tab
         <Drawer
             open={isOpen}
             onClose={toggleSidebar}
+            onMouseEnter={() => setHovered(true)}
+            onMouseLeave={() => setHovered(false)}
             variant="permanent"
             sx={{
                 width: isOpen ? "300px" : "0px",

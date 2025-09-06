@@ -31,10 +31,16 @@ export const columnRouter = createTRPCRouter({
         throw new Error("Unauthorized to create column");
       }
 
+      const last = await ctx.db.column.findFirst({
+        where: { tableId },
+        orderBy: { order: "desc" },
+      })
+
       const newColumn = await db.column.create({
         data: {
           authorId: ctx.session.user.id,
           tableId, name, type,
+          order: last ? last.order + 10 : 0
         }
       });
 
