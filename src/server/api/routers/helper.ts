@@ -1,5 +1,5 @@
 import { db } from "@/server/db";
-import { ColumnType, type Column, type Row } from "@prisma/client";
+import { ColumnType, Prisma, type Column, type Row } from "@prisma/client";
 import type { Context } from "@/server/api/trpc";
 
 export const OPERATORS = ["contains", "does not contain", "is", "is not", "is empty", "is not empty"] as const;
@@ -99,11 +99,11 @@ export async function createDefaultTable(ctx: Context, baseId: string) {
   return newTable;
 }
 
-export function buildPrismaFilter(filters: FilterCondition[]): any {
+export function buildPrismaFilter(filters: FilterCondition[]): Prisma.RowWhereInput | undefined {
   if (!filters || filters.length === 0) return undefined;
 
   // Determine the locked logic from the second filter, default to AND
-  const lockedLogic = filters[1]?.logical || "and";
+  const lockedLogic = filters[1]?.logical ?? "and";
 
   const conditions = filters.map(f => mapFilterToPrisma(f));
 
@@ -113,17 +113,18 @@ export function buildPrismaFilter(filters: FilterCondition[]): any {
   return { OR: conditions };
 }
 
-export function mapFilterToPrisma(f: FilterCondition) {
+export function mapFilterToPrisma(f: FilterCondition): Prisma.RowWhereInput {
   const columnField = f.column;
+  const valueStr = f.value?.toString() || "";
   switch (f.operator) {
     case "contains":
-      return { values: { some: { columnId: columnField, stringValue: { contains: f.value } } } };
+      return { values: { some: { columnId: columnField, stringValue: { contains: valueStr } } } };
     case "does not contain":
-      return { values: { none: { columnId: columnField, stringValue: { contains: f.value } } } };
+      return { values: { none: { columnId: columnField, stringValue: { contains: valueStr } } } };
     case "is":
-      return { values: { some: { columnId: columnField, stringValue: f.value } } };
+      return { values: { some: { columnId: columnField, stringValue: valueStr } } };
     case "is not":
-      return { values: { none: { columnId: columnField, stringValue: f.value } } };
+      return { values: { none: { columnId: columnField, stringValue: valueStr } } };
     case "is empty":
       return { values: { none: { columnId: columnField, stringValue: { not: null } } } };
     case "is not empty":

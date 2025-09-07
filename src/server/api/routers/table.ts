@@ -6,7 +6,7 @@ import {
   publicProcedure,
 } from "@/server/api/trpc";
 import { db } from "@/server/db";
-import { ColumnType } from "@prisma/client";
+import { ColumnType, Prisma } from "@prisma/client";
 import { buildPrismaFilter, createDefaultTable, type FilterCondition } from "./helper";
 
 const isCompleteFilter = (f: FilterCondition): boolean => {
@@ -45,7 +45,7 @@ export const tableRouter = createTRPCRouter({
 
       if (!table) throw new Error("Table not found");
 
-      const currentView = table.views.find(v => v.viewId === table.currentView) || table.views[0];
+      const currentView = table.views.find(v => v.viewId === table.currentView) ?? table.views[0];
       if (!currentView) throw new Error("View not found!");
 
       const allFilters: FilterCondition[] = Array.isArray(currentView.filters)
@@ -53,7 +53,6 @@ export const tableRouter = createTRPCRouter({
         : [];
 
       const validFilters = allFilters.filter(isCompleteFilter);
-      console.log(validFilters);
 
       if (validFilters.length === 0) {
         return table;
@@ -61,7 +60,7 @@ export const tableRouter = createTRPCRouter({
 
       const rows = await ctx.db.row.findMany({
         where: validFilters.length
-          ? buildPrismaFilter(validFilters)
+          ? buildPrismaFilter(validFilters)!
           : { tableId: table.tableId }, // if no valid filters, just display all rows
         include: { values: true },
       });
