@@ -25,6 +25,13 @@ export async function createDefaultTable(ctx: Context, baseId: string) {
       views: {
         create: {
           name: "Grid View",
+          description: "",
+          hiddenFields: "",
+          filters:[],
+          groupBy: "",
+          sort: "",
+          color: "",
+          rowHeight: "SHORT"
         },
       },
     },

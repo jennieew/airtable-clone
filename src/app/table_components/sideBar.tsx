@@ -2,6 +2,7 @@ import { Box, Button, Drawer, TextField } from "@mui/material";
 import { useState } from "react";
 import type { Cell, Column, Row, Table, View } from "@prisma/client";
 import { api } from "@/utils/api";
+import type { JsonValue } from "@prisma/client/runtime/library";
 
 interface SideBarProps {
   openSidebar: boolean;
@@ -37,7 +38,7 @@ export default function TableSideBar({ openSidebar, setOpenSideBar, hovered, set
                 name: name ?? `Grid ${table.viewCount + 1}`,
                 description: "",
                 hiddenFields: "",
-                filters: "",
+                filters: [] as unknown as JsonValue[],
                 groupBy: "",
                 sort: "",
                 color: "",

@@ -53,7 +53,7 @@ export default function TableTabs({ tables, selectedTab, setSelectedTab, baseId 
       }
     },
     onSettled: async () => {
-      await utils.base.getBase.invalidate({ baseId })
+      await utils.base.getBase.invalidate({ baseId });
     }
   });
 

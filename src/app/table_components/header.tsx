@@ -90,7 +90,10 @@ export default function TableHeaderBar({ openSidebar, setOpenSideBar, setHovered
                 <Button sx={{ textTransform: "none", color: "black" }}>Group</Button>
                 <Button 
                     sx={{ textTransform: "none", color: "black" }}
-                    onClick={() => setOpenSortMenu(!openSortMenu)}
+                    onClick={(e) => {
+                        setSortAnchor(e.currentTarget);
+                        setOpenSortMenu(!openSortMenu);
+                    }}
                 >Sort</Button>
                 <Button sx={{ textTransform: "none", color: "black" }}>Color</Button>
                 <Button sx={{ textTransform: "none", color: "black" }}>Row height</Button>
@@ -98,7 +101,7 @@ export default function TableHeaderBar({ openSidebar, setOpenSideBar, setHovered
             </div>
 
             <FilterMenu filterAnchor={filterAnchor} openFilterMenu={openFilterMenu} onClose={handleCloseFilterMenu} view={view} table={table}/>
-            <SortMenu sortAnchor={sortAnchor} openSortMenu={openSortMenu} onClose={handleCloseSortMenu} viewId={""}/>
+            <SortMenu sortAnchor={sortAnchor} openSortMenu={openSortMenu} onClose={handleCloseSortMenu} viewId={""} table={table}/>
         </Box>
     )
 }

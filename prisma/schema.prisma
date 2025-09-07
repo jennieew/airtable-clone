@@ -157,7 +157,7 @@ model View {
     name         String
     description  String @default("")
     hiddenFields String @default("")
-    filters      Json   @default("[]")
+    filters      Json[] @default([])   
     groupBy      String @default("")
     sort         String @default("")
     color        String @default("")
