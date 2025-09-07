@@ -86,6 +86,7 @@ export const viewRouter = createTRPCRouter({
 
       return newView;
     }),
+
   addOrUpdateFilter: protectedProcedure
     .input(z.object({
       viewId: z.string(),
@@ -124,4 +125,33 @@ export const viewRouter = createTRPCRouter({
 
       return updatedFilters;
     }),
+
+    deleteFilter: protectedProcedure
+      .input(z.object({
+        viewId: z.string(),
+        index: z.number(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const view = await ctx.db.view.findUnique({
+          where: { viewId: input.viewId }
+        });
+
+        if (!view) throw new Error("View not found");
+
+        const filters = (view.filters as unknown as FilterCondition[]) || [];
+        const updatedFilters = filters.filter((_, i) => i !== input.index);
+
+        if (input.index === 0 && updatedFilters[0]) {
+          updatedFilters[0] = { ...updatedFilters[0], logical: "where" };
+        }
+
+        await ctx.db.view.update({
+          where: { viewId: input.viewId },
+          data: {
+            filters: updatedFilters as unknown as Prisma.InputJsonArray[],
+          },
+        });
+
+        return updatedFilters;
+      })
 })

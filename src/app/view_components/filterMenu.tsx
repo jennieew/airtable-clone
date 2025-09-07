@@ -42,8 +42,9 @@ const isCompleteFilter = (f: FilterCondition): boolean => {
 };
 
 export default function FilterMenu({ openFilterMenu, filterAnchor, onClose, view, table }: filterMenuProps) {
-  // const filters: FilterCondition[] = ((view.filters as unknown) as FilterCondition[]) || [];
-  const [filters, setFilters] = useState<FilterCondition[]>([]);
+  const [filters, setFilters] = useState<FilterCondition[]>(
+    ((view.filters as unknown) as FilterCondition[]) || []
+  );
 
   const utils = api.useUtils();
   const addOrUpdateFilters = api.view.addOrUpdateFilter.useMutation({
@@ -104,16 +105,53 @@ export default function FilterMenu({ openFilterMenu, filterAnchor, onClose, view
     ]);
   };
 
+  const deleteFilter = api.view.deleteFilter.useMutation({
+    onMutate: async ({ viewId, index }) => {
+      await utils.view.getView.cancel({ viewId });
+      await utils.view.getViews.cancel();
+
+      const previousView = utils.view.getView.getData({ viewId });
+
+      utils.view.getView.setData({ viewId }, (old) => {
+        if (!old) return old;
+        
+        const existingFilters = (old.filters ?? []) as FilterCondition[];
+        const updatedFilters = existingFilters.filter((_, i) => i !== index);
+
+        if (index === 0 && updatedFilters[0]) {
+          updatedFilters[0] = {
+            ...updatedFilters[0],
+            logical: "where"
+          }
+        }
+
+        return {
+          ...old,
+          filters: updatedFilters,
+        };
+      });
+
+      return { previousView };
+    },
+    onError: (err, variables, context) => {
+      if (context?.previousView) {
+        utils.view.getView.setData({ viewId: variables.viewId }, context.previousView);
+      }
+    },
+    onSettled: async (data, err, variables) => {
+      await utils.view.getView.invalidate({ viewId: variables.viewId });
+      await utils.table.getTable.invalidate({ tableId: view.tableId });
+    }
+  })
+
   const handleDeleteFilter = (index: number) => {
     setFilters(filters.filter((_, i) => i !== index));
-  };
 
-  const handleSave = async () => {
-    const validFilters = filters.filter(isCompleteFilter);
-    console.log("Saving filters:", validFilters);
-    // here you’d call your mutation:
-    // await db.view.update({ where: { viewId }, data: { filters: validFilters } })
-    onClose();
+    // if it is a valid filter, then delete from db
+    deleteFilter.mutate({
+      viewId: view.viewId,
+      index
+    });
   };
 
   const handleUpdateFilter = (i: number, updated: Partial<FilterCondition>) => {
