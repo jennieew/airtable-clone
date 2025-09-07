@@ -2,6 +2,15 @@ import { db } from "@/server/db";
 import { ColumnType, type Column, type Row } from "@prisma/client";
 import type { Context } from "@/server/api/trpc";
 
+export const OPERATORS = ["contains", "does not contain", "is", "is not", "is empty", "is not empty"] as const;
+export type Operator = typeof OPERATORS[number];
+export interface FilterCondition {
+  logical?: "and" | "or" | "where";
+  column: string;
+  operator: Operator;
+  value: string | number;
+}
+
 export async function createDefaultTable(ctx: Context, baseId: string) {
   const base = await ctx.db.base.findUnique({
     where: { baseId },
@@ -22,6 +31,7 @@ export async function createDefaultTable(ctx: Context, baseId: string) {
       name: `Table ${base.tableCount + 1}`,
       authorId: session.user.id,
       baseId,
+      currentView: "",
       views: {
         create: {
           name: "Grid View",
@@ -38,6 +48,11 @@ export async function createDefaultTable(ctx: Context, baseId: string) {
     include: {
       views: true,
     },
+  });
+
+  await db.table.update({
+    where: { tableId: newTable.tableId },
+    data: { currentView: newTable.views[0]!.viewId },
   });
 
   // increment table count
@@ -84,11 +99,34 @@ export async function createDefaultTable(ctx: Context, baseId: string) {
   return newTable;
 }
 
-export const OPERATORS = ["contains", "does not contain", "is", "is not", "is empty", "is not empty"] as const;
-export type Operator = typeof OPERATORS[number];
-export interface FilterCondition {
-  logical?: "and" | "or" | "where";
-  column: string;
-  operator: Operator;
-  value: string | number;
+export function buildPrismaFilter(filters: FilterCondition[]): any {
+  if (!filters || filters.length === 0) return undefined;
+
+  // Determine the locked logic from the second filter, default to AND
+  const lockedLogic = filters[1]?.logical || "and";
+
+  const conditions = filters.map(f => mapFilterToPrisma(f));
+
+  if (conditions.length === 1) return conditions[0]; // only "where"
+
+  if (lockedLogic === "and") return { AND: conditions };
+  return { OR: conditions };
+}
+
+export function mapFilterToPrisma(f: FilterCondition) {
+  const columnField = f.column;
+  switch (f.operator) {
+    case "contains":
+      return { values: { some: { columnId: columnField, stringValue: { contains: f.value } } } };
+    case "does not contain":
+      return { values: { none: { columnId: columnField, stringValue: { contains: f.value } } } };
+    case "is":
+      return { values: { some: { columnId: columnField, stringValue: f.value } } };
+    case "is not":
+      return { values: { none: { columnId: columnField, stringValue: f.value } } };
+    case "is empty":
+      return { values: { none: { columnId: columnField, stringValue: { not: null } } } };
+    case "is not empty":
+      return { values: { some: { columnId: columnField, stringValue: { not: null } } } };
+  }
 }

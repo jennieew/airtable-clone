@@ -9,15 +9,19 @@ import TableCell from "./tableCell";
 
 type RowWithRelations = Row & { values: Cell[] };
 
-type TableWithRelations = Table & {
-  columns: Column[];
-  rows: RowWithRelations[];
-};
-
 type TableComponentProps = {
   tableId: string;
   view: View;
 };
+
+const OPERATORS = ["contains", "does not contain", "is", "is not", "is empty", "is not empty"] as const;
+
+export interface FilterCondition {
+  logical?: "and" | "or" | "where";
+  column: string;
+  operator: typeof OPERATORS[number];
+  value: string | number;
+}
 
 export default function TableDisplay({ tableId, view }: TableComponentProps) {
   // for creating a new column
@@ -125,24 +129,52 @@ export default function TableDisplay({ tableId, view }: TableComponentProps) {
       await utils.cell.getCell.invalidate({ cellId: variables.cellId });
     },
   });
-
-  // filters on the view!!
   
   // transform table to flat objects
   useEffect(() => {
-      if (table) {
-        setTableData(
-          table.rows.map((row) => {
-            const rowObj: Record<string, string | number> = {};
-            table.columns.forEach((col) => {
-              const cell = row.values.find((c) => c.columnId === col.columnId);
-              rowObj[col.columnId] = cell?.stringValue ?? cell?.numberValue ?? "";
-            });
-            return rowObj;
-          })
-        );
-      }
-    }, [table]);
+    if (!table) return;
+
+    const filters: FilterCondition[] = (view.filters as unknown as FilterCondition[]) ?? [];
+
+    let filteredRows = table.rows;
+
+    // apply filters from the current view
+    (filters ?? []).forEach((filter) => {
+      if (!filter) return;
+      filteredRows = filteredRows.filter((row) => {
+        const cell = row.values.find(c => c.columnId === filter.column);
+        if (!cell) return false;
+
+        switch (filter.operator) {
+          case "contains":
+            return (cell.stringValue ?? "").includes(filter.value as string);
+          case "does not contain":
+            return !(cell.stringValue ?? "").includes(filter.value as string);
+          case "is":
+            return (cell.stringValue ?? cell.numberValue) === filter.value;
+          case "is not":
+            return (cell.stringValue ?? cell.numberValue) !== filter.value;
+          case "is empty":
+            return (cell.stringValue ?? cell.numberValue ?? "") === "";
+          case "is not empty":
+            return (cell.stringValue ?? cell.numberValue ?? "") !== "";
+          default:
+            return true;
+        }
+      });
+    });
+
+    setTableData(
+      filteredRows.map((row) => {
+        const rowObj: Record<string, string | number> = {};
+        table.columns.forEach((col) => {
+          const cell = row.values.find((c) => c.columnId === col.columnId);
+          rowObj[col.columnId] = cell?.stringValue ?? cell?.numberValue ?? "";
+        });
+        return rowObj;
+      })
+    );
+  }, [table, view.filters]);
 
     // create the columns for the tables, making them input cells
     const tableColumns = useMemo(() => {

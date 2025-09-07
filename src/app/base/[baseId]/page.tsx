@@ -44,7 +44,8 @@ export default function BasePage() {
               rows: [],
               views: [],
               viewCount: 1,
-              viewIndex: 0,
+              // viewIndex: 0,
+              currentView: "",
             },
           ],
         };

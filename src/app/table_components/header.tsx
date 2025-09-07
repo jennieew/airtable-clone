@@ -23,7 +23,7 @@ interface HeaderProps {
 
 export default function TableHeaderBar({ openSidebar, setOpenSideBar, setHovered, view, table }: HeaderProps) {
     const [isEditingViewName, setIsEditingViewName] = useState(false);
-    const [viewName, setViewName] = useState(view.name); // update to view name!!
+    const [viewName, setViewName] = useState(view.name);
 
     const inputRef = useRef<HTMLInputElement>(null);
 

@@ -91,18 +91,32 @@ export default function FilterMenu({ openFilterMenu, filterAnchor, onClose, view
   });
 
   const addFilter = () => {
-    const firstCol = table?.columns?.[0]?.name;
+    const firstCol = table?.columns?.[0]?.columnId;
     if (!firstCol) return;
 
-    setFilters([
-      ...filters,
-      {
-        logical: filters.length === 0 ? undefined : "and",
-        column: firstCol,
-        operator: "contains",
-        value: "",
-      },
-    ]);
+    let newLogical: "where" | "and" | "or" | undefined;
+
+    if (filters.length === 0) {
+      newLogical = "where";
+    } else if (filters.length === 1) {
+      newLogical = "and";
+    } else {
+      newLogical = filters[1]?.logical ?? "and";
+    }
+
+    const newFilter: FilterCondition = {
+      logical: newLogical,
+      column: firstCol,
+      operator: "contains",
+      value: "",
+    };
+
+    setFilters([...filters, newFilter]);
+
+    addOrUpdateFilters.mutate({
+      viewId: view.viewId,
+      newFilter,
+    });
   };
 
   const deleteFilter = api.view.deleteFilter.useMutation({
@@ -155,27 +169,22 @@ export default function FilterMenu({ openFilterMenu, filterAnchor, onClose, view
   };
 
   const handleUpdateFilter = (i: number, updated: Partial<FilterCondition>) => {
-    const newFilters = filters.map((fi, j) => {
-      let logicalValue = fi.logical;
-      if (j === 0) logicalValue = "where";
-
-      return j === i
-        ? { ...fi, ...updated, logical: logicalValue } : fi;
-    });
-
-    setFilters(newFilters);
-
-    // apply mutation immediately if filter is valid
-    const current = filters[i] ?? { logical: undefined, column: "", operator: "contains" as const, value: "" };
+    const current = filters[i] ?? { column: "", operator: "contains", value: "" };
+  
     const candidate: FilterCondition = {
-      ...current,
-      ...updated,
-      logical: i === 0 ? "where" : updated.logical ?? current.logical,
+      column: updated.column ?? current.column,
+      operator: updated.operator ?? current.operator,
+      value: updated.value ?? current.value,
+      logical: i === 0 ? "where" : updated.logical ?? filters[1]?.logical ?? "and",
     };
-    if (isCompleteFilter(candidate)) {
+
+    setFilters(filters.map((f, j) => j === i ? candidate : f));
+    // send to backend only when column/operator/value exist
+    if (candidate.column && candidate.operator) {
       addOrUpdateFilters.mutate({
-        viewId: view.viewId,
-        newFilter: candidate,
+      viewId: view.viewId,
+      index: i,
+      newFilter: candidate,
       });
     }
   };
@@ -195,7 +204,7 @@ export default function FilterMenu({ openFilterMenu, filterAnchor, onClose, view
             <MenuItem key={i} disableRipple disableTouchRipple>
               {i === 0 ? (
                 "where"
-              ) : (
+              ) : i === 1 ? (
                 <Select
                   value={f.logical}
                   onChange={(e) => {
@@ -208,24 +217,24 @@ export default function FilterMenu({ openFilterMenu, filterAnchor, onClose, view
                   <MenuItem value={"and"}>and</MenuItem>
                   <MenuItem value={"or"}>or</MenuItem>
                 </Select>
+              ) : (
+                f.logical
               )}
 
               <Select
                 value={f.column}
                 onChange={(e) => {
-                  setFilters(filters.map((fi, j) => j === i ? { ...fi, column: e.target.value } : fi));
                   handleUpdateFilter(i, { column: e.target.value });
                 }}
               >
                 {table.columns.map((col) => (
-                  <MenuItem key={col.columnId} value={col.name}>{col.name}</MenuItem>
+                  <MenuItem key={col.columnId} value={col.columnId}>{col.name}</MenuItem>
                 ))}
               </Select>
 
               <Select
                 value={f.operator}
                 onChange={(e) => {
-                  setFilters(filters.map((fi, j) => j === i ? { ...fi, operator: e.target.value } : fi));
                   handleUpdateFilter(i, {
                     operator: e.target.value,
                   });

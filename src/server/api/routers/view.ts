@@ -80,7 +80,6 @@ export const viewRouter = createTRPCRouter({
           viewCount: {
             increment: 1,
           },
-          viewIndex: table.viewCount,
         },
       });
 
@@ -90,7 +89,7 @@ export const viewRouter = createTRPCRouter({
   addOrUpdateFilter: protectedProcedure
     .input(z.object({
       viewId: z.string(),
-      index: z.number().optional(), // if provided, update at this index
+      index: z.number().optional(),
       newFilter: z.object({
         logical: z.optional(z.enum(["and", "or", "where"])),
         column: z.string(),
@@ -145,13 +144,11 @@ export const viewRouter = createTRPCRouter({
           updatedFilters[0] = { ...updatedFilters[0], logical: "where" };
         }
 
-        await ctx.db.view.update({
+        return await ctx.db.view.update({
           where: { viewId: input.viewId },
           data: {
             filters: updatedFilters as unknown as Prisma.InputJsonArray[],
           },
         });
-
-        return updatedFilters;
       })
 })

@@ -23,13 +23,16 @@ export default function TablePage({ table }: TablePageProps) {
 
     if (!table) return null;
 
+    const currentView = table.views.find((v) => v.viewId === table.currentView) ?? table.views[0];
+    if (!currentView) throw new Error("View not found!!");
+
     return (
         <Box sx={{ display: "flex", flexDirection: "column"}}>
-            <TableHeaderBar openSidebar={openSidebar} setOpenSideBar={setOpenSideBar} setHovered={setHovered} view={table.views[table.viewIndex]!} table={table}/>
+            <TableHeaderBar openSidebar={openSidebar} setOpenSideBar={setOpenSideBar} setHovered={setHovered} view={currentView} table={table}/>
             <Box sx={{ display: "flex", flex: 1}}>
                 <TableSideBar openSidebar={openSidebar} setOpenSideBar={setOpenSideBar} hovered={hovered} setHovered={setHovered} table={table}/>
                 {table && (
-                    <TableDisplay tableId={table.tableId} view={table.views[table.viewIndex]!}/>
+                    <TableDisplay tableId={table.tableId} view={currentView}/>
                 )}
             </Box>
         </Box>
