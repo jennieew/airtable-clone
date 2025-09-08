@@ -1,5 +1,5 @@
 import { Box, Button, Drawer, TextField } from "@mui/material";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { Cell, Column, Row, Table, View } from "@prisma/client";
 import { api } from "@/utils/api";
 import type { JsonValue } from "@prisma/client/runtime/library";
@@ -28,7 +28,15 @@ export default function TableSideBar({ openSidebar, setOpenSideBar, hovered, set
     const isOpen = openSidebar || hovered;
     const utils = api.useUtils();
 
-    if (!table) return;
+    const [localTable, setLocalTable] = useState(table);
+
+    useEffect(() => {
+        setLocalTable(table); // sync when parent updates
+    }, [table]);
+
+    const [selectedViewId, setSelectedViewId] = useState(localTable?.currentView ?? localTable?.views[0]?.viewId);
+
+    if (!table) return null;
 
     const createView = api.view.createView.useMutation({
         onMutate: async ({ name }) => {
@@ -48,13 +56,26 @@ export default function TableSideBar({ openSidebar, setOpenSideBar, hovered, set
                 rowHeight: "SHORT" as const,
             };
 
+            setLocalTable((old) =>
+                old
+                ? {
+                    ...old,
+                    views: [...(old.views || []), newViewTemp],
+                    currentView: old.currentView ?? tempId,
+                    }
+                : old
+            );
+
             utils.table.getTable.setData({ tableId: table.tableId }, (old) => {
                 if (!old) return old;
+                const typedOld = old as TableWithRelations;
                 return {
-                    ...old,
-                    views: [...old.views, newViewTemp],
+                ...typedOld,
+                views: [...(typedOld.views || []), newViewTemp],
+                currentView: typedOld.currentView ?? tempId, // 👈
                 };
             });
+            
             return { previousTable };
         },
         onError: (err, variables, context) => {
@@ -89,7 +110,7 @@ export default function TableSideBar({ openSidebar, setOpenSideBar, hovered, set
             }}
         >
             <Button
-                onClick={() => createView.mutate({tableId: table.tableId})} 
+                onClick={() => createView.mutate({ tableId: table.tableId })} 
                 sx={{ textTransform: "none", color: "black", justifyContent: "start" }}
             >
                 <AddIcon fontSize="small"/>
@@ -109,13 +130,20 @@ export default function TableSideBar({ openSidebar, setOpenSideBar, hovered, set
                 />
                 <SettingsOutlinedIcon fontSize="small"/>
             </div>
-            {table.views.map((view) => (
+            {localTable?.views.map((view, index) => (
                 <Button
                     key={view.viewId}
+                    onClick={() => {
+                        setSelectedViewId(view.viewId);
+                        setLocalTable((old) => old ? { ...old, currentView: view.viewId } : old);
+                    }}
                     sx={{
-                        color: "black",
-                        textTransform: "none",
-                        justifyContent: "start"
+                    color: "black",
+                    textTransform: "none",
+                    justifyContent: "start",
+                    backgroundColor:
+                        localTable.currentView === view.viewId ? "#e0e0e0" : "transparent",
+                    "&:hover": { backgroundColor: "#f5f5f5" }, // optional hover
                     }}
                 >
                     <TableChartOutlinedIcon fontSize="small" color="primary"/> {view.name}
