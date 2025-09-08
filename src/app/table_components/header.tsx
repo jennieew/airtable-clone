@@ -91,6 +91,9 @@ export default function TableHeaderBar({ openSidebar, setOpenSideBar, setHovered
             }
 
             <div className="flex items-center gap-1 ml-auto">
+                <Button>
+                    Add 100k Rows
+                </Button>
                 <Button sx={{ textTransform: "none", color: "black" }}>
                     <VisibilityOffOutlinedIcon fontSize="small"/>
                     Hide Fields

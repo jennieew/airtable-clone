@@ -1,6 +1,12 @@
-import { createColumnHelper, flexRender, getCoreRowModel, useReactTable } from "@tanstack/react-table";
+import { 
+  createColumnHelper, 
+  flexRender, 
+  getCoreRowModel, 
+  useReactTable,
+  getSortedRowModel,
+} from "@tanstack/react-table";
 import type { Cell, Column, Row, Table, View } from "@prisma/client";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@mui/material";
 import ColumnMenu from "./columnMenu";
 import { api } from "@/utils/api";
@@ -14,7 +20,9 @@ import {
   TableHead,
   TableHeader as ShadHeader,
   TableRow,
-} from "@/components/ui/table"
+} from "@/components/ui/table";
+
+import { useVirtualizer } from "@tanstack/react-virtual";
 
 type RowWithRelations = Row & { values: Cell[] };
 
@@ -62,6 +70,14 @@ export default function TableDisplay({ tableId, view, filters, setFilters }: Tab
   const [tableData, setTableData] = useState<Record<string, string | number>[]>([]);
   const columnHelper = createColumnHelper<Record<string, string | number>>();
 
+  // VIRTUALISATION
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const virtualiser = useVirtualizer({
+    count: table?.rows.length ?? 0,
+    estimateSize: () => 60,
+    getScrollElement: () => scrollRef.current,
+  });
+
   // mutation for adding a row
   const utils = api.useUtils();
   const addRow = api.row.createRow.useMutation({
@@ -91,12 +107,15 @@ export default function TableDisplay({ tableId, view, filters, setFilters }: Tab
             numberValue: col.type === "NUMBER" ? 0 : null,
           })),
         };
+        
+        // setTableData(prev => [...prev, newRow]);
 
         return {
           ...old,
           rows: [...old.rows, newRow],
         };
       });
+
 
       return { previousTable, tempId }
     },
@@ -226,59 +245,75 @@ export default function TableDisplay({ tableId, view, filters, setFilters }: Tab
   if (isError || !table) return <div>Table not found</div>;
 
   return (
-    <div className="bg-white">
-      <ShadTable>
-        <ShadHeader>
-          {tanstackTable.getHeaderGroups().map((headerGroup) => (
-            <TableRow key={headerGroup.id}>
-              <TableHead style={{ width: "50px" }}>#</TableHead>
-              {headerGroup.headers.map((header) => (
-                <TableHead 
-                  key={header.id}
-                  style={{ width: "180px" }}
-                  onClick={(e) => openHeaderMenu(e, header.column.id)}
-                >
-                  {flexRender(
-                    header.column.columnDef.header,
-                    header.getContext()
-                  )}
-                </TableHead>
-              ))}
-              <TableHead>
-                <Button
-                sx={{color: "black"}}
-                  onClick={handleOpenColumnMenu}
-                >+</Button>
-              </TableHead>
-            </TableRow>
-          ))}
-        </ShadHeader>
+    <div className="bg-white container" ref={scrollRef} style={{ display: "flex", alignItems: "center" }}>
+      <div style={{ height: `${virtualiser.getTotalSize()}px`, flex: 1 }}>
+        <ShadTable style={{ tableLayout: "fixed", width: "100%" }}>
+          <ShadHeader>
+            {tanstackTable.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
+                <TableHead style={{ width: "50px" }}>#</TableHead>
 
-        <ColumnMenu
-          openColumnMenu={Boolean(anchorEl)} 
-          anchorEl={anchorEl} 
-          onClose={handleCloseMenu} 
-          tableId={table.tableId} 
-        />
-        
-        <TableBody>
-          {tanstackTable.getRowModel().rows.map((row, rowIndex) => (
-            <TableRow key={row.id}>
-              <ShadCell>{rowIndex + 1}</ShadCell>
-              {row.getVisibleCells().map((cell) => (
-                <ShadCell key={cell.id}>
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                </ShadCell>
-              ))}
+                {headerGroup.headers.map((header) => (
+                  <TableHead 
+                    key={header.id}
+                    colSpan={header.colSpan}
+                    style={{ width: "180px" }}
+                    onClick={(e) => openHeaderMenu(e, header.column.id)}
+                  >
+                    {flexRender(
+                      header.column.columnDef.header,
+                      header.getContext()
+                    )}
+                  </TableHead>
+                ))}
+
+                <TableHead style={{ width: "50px" }}>
+                  <Button
+                  sx={{color: "black"}}
+                    onClick={handleOpenColumnMenu}
+                  >+</Button>
+                </TableHead>
+              </TableRow>
+            ))}
+          </ShadHeader>
+
+          <TableBody>
+            {virtualiser.getVirtualItems().map((virtualRow, index) => {
+              const row = tanstackTable.getRowModel().rows[virtualRow.index];
+              return(
+                <TableRow
+                  key={row?.id}
+                  style={{
+                    height: `${virtualRow.size}px`,
+                    transform: `translateY(${
+                      virtualRow.start - index * virtualRow.size
+                    }px)`,
+                  }}
+                >
+                  <ShadCell>{index + 1}</ShadCell>
+                  {row?.getVisibleCells().map((cell) => (
+                    <ShadCell key={cell.id} style={{ width: "180px" }}>
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </ShadCell>
+                  ))}
+                </TableRow>
+              )
+            })}
+            <TableRow onClick={() => addRow.mutate({ tableId })} >
+              <ShadCell colSpan={tanstackTable.getAllColumns().length + 1}>
+                +
+              </ShadCell>
             </TableRow>
-          ))}
-          <TableRow onClick={() => addRow.mutate({ tableId })} >
-            <ShadCell colSpan={tanstackTable.getAllColumns().length + 1}>
-              +
-            </ShadCell>
-          </TableRow>
-        </TableBody>
-      </ShadTable>
+          </TableBody>
+        </ShadTable>
+      </div>
+
+      <ColumnMenu
+        openColumnMenu={Boolean(anchorEl)} 
+        anchorEl={anchorEl} 
+        onClose={handleCloseMenu} 
+        tableId={table.tableId} 
+      />
 
       <TableHeader headerMenuAnchor={headerMenuAnchor} closeHeaderMenu={closeHeaderMenu} tableId={tableId}></TableHeader>
     </div>

@@ -5,6 +5,8 @@ import TableSideBar from "./sideBar";
 import type { Cell, Column, Row, Table, View } from "@prisma/client";
 import TableDisplay, { type FilterCondition } from "./table";
 
+import { useVirtualizer } from '@tanstack/react-virtual'
+
 type RowWithRelations = Row & { values: Cell[] };
 
 type TableWithRelations = Table & {
@@ -30,7 +32,7 @@ export default function TablePage({ table }: TablePageProps) {
         setFilters(currentView.filters as unknown as FilterCondition[]);
     }, [currentView]);
 
-    if (!table || !currentView) throw new Error("Table not found!!");
+    if (!table || !currentView) return null;
 
     return (
         <Box sx={{ display: "flex", flexDirection: "column"}}>
