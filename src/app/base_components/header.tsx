@@ -1,8 +1,9 @@
-import { Box, Button, Menu, MenuItem, TextField } from "@mui/material";
+import { Box, Button, Divider, Menu, MenuItem, TextField } from "@mui/material";
 import type { Base } from "@prisma/client";
 import React, { useState } from "react";
 import { api } from "@/utils/api";
-import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import KeyboardArrowRightOutlinedIcon from '@mui/icons-material/KeyboardArrowRightOutlined';
 
 type BaseCardProps = {
   base: Base;
@@ -59,7 +60,8 @@ export default function BaseHeader({ base }: BaseCardProps) {
       sx={{
         width: "100%",
         pl: "60px", 
-        borderBottom: "1px solid rgba(0,0,0,0.1)"
+        borderBottom: "1px solid rgba(0,0,0,0.1)",
+        height: "56px",
       }}
     >
       <img src="/default_base_image.png" alt="default base image"/>
@@ -74,7 +76,7 @@ export default function BaseHeader({ base }: BaseCardProps) {
           color: "text.primary",
           textTransform: "none"
         }}
-      >{base.name} <KeyboardArrowDownIcon/> </Button>
+      >{base.name} <ExpandMoreIcon fontSize="small"/> </Button>
       <Menu
         anchorEl={anchorEl}
         open={open}
@@ -106,8 +108,10 @@ export default function BaseHeader({ base }: BaseCardProps) {
             onBlur={void handleRenameBase}
           />
         </MenuItem>
-        <MenuItem>Appearance</MenuItem>
-        <MenuItem>Base Guide</MenuItem>
+        <Divider />
+        <MenuItem> <KeyboardArrowRightOutlinedIcon fontSize="small"/> Appearance</MenuItem>
+        <Divider />
+        <MenuItem> <KeyboardArrowRightOutlinedIcon fontSize="small"/> Base Guide</MenuItem>
       </Menu>
     </Box>
   )

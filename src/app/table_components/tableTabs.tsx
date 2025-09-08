@@ -1,6 +1,7 @@
 import { Box, Button, Menu, MenuItem } from "@mui/material";
 import { useState } from "react";
 import { api } from "@/utils/api";
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
 type TableTabsProps = {
   tables: { tableId: string; name: string }[];
@@ -87,7 +88,7 @@ export default function TableTabs({ tables, selectedTab, setSelectedTab, baseId 
   });
 
   return (
-    <Box sx={{ display: "flex", gap: 1 }}>
+    <Box sx={{ display: "flex", gap: 1, alignItems: "center"}}>
       {tables.map((table, index) => (
         <Button
           key={table.tableId}
@@ -103,9 +104,10 @@ export default function TableTabs({ tables, selectedTab, setSelectedTab, baseId 
             color: selectedTab === index ? "black" : "#50586f",
             backgroundColor: "transparent",
             fontWeight: selectedTab === index ? "bold" : "normal",
+            textTransform: "none",
           }}
         >
-          {table.name}
+          {table.name} <ExpandMoreIcon fontSize="small"/>
         </Button>
       ))}
 

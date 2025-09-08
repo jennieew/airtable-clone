@@ -4,6 +4,16 @@ import MenuIcon from '@mui/icons-material/Menu';
 import FilterMenu from "../view_components/filterMenu";
 import SortMenu from "../view_components/sortMenu";
 import type { Cell, Column, Row, Table, View } from "@prisma/client";
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import TableChartOutlinedIcon from '@mui/icons-material/TableChartOutlined';
+import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined';
+import FilterListOutlinedIcon from '@mui/icons-material/FilterListOutlined';
+import ListAltOutlinedIcon from '@mui/icons-material/ListAltOutlined';
+import ImportExportOutlinedIcon from '@mui/icons-material/ImportExportOutlined';
+import FormatColorFillOutlinedIcon from '@mui/icons-material/FormatColorFillOutlined';
+import FormatLineSpacingIcon from '@mui/icons-material/FormatLineSpacing';
+import IosShareIcon from '@mui/icons-material/IosShare';
+import SearchIcon from '@mui/icons-material/Search';
 
 type RowWithRelations = Row & { values: Cell[] };
 
@@ -56,7 +66,7 @@ export default function TableHeaderBar({ openSidebar, setOpenSideBar, setHovered
                 onMouseEnter={() => setHovered(true)}
                 onMouseLeave={() => setHovered(false)}
             >
-                <MenuIcon/>
+                <MenuIcon fontSize="small"/>
             </IconButton>
             {isEditingViewName ? (
                 <TextField
@@ -73,31 +83,54 @@ export default function TableHeaderBar({ openSidebar, setOpenSideBar, setHovered
                         onDoubleClick={() => setIsEditingViewName(true)}
                         sx={{ textTransform: "none", color: "black" }}
                     >
-                        {viewName}
+                        <TableChartOutlinedIcon fontSize="small" color="primary"/> {viewName} <ExpandMoreIcon fontSize="small"/>
                     </Button>
                 )
             }
 
-            <div>
-                <Button sx={{ textTransform: "none", color: "black" }}>Hide Fields</Button>
+            <div className="flex items-center gap-1 ml-auto">
+                <Button sx={{ textTransform: "none", color: "black" }}>
+                    <VisibilityOffOutlinedIcon fontSize="small"/>
+                    Hide Fields
+                </Button>
                 <Button 
                     sx={{ textTransform: "none", color: "black" }}
                     onClick={(e) => {
                         setFilterAnchor(e.currentTarget);
                         setOpenFilterMenu(!openFilterMenu);
                     }}
-                >Filter</Button>
-                <Button sx={{ textTransform: "none", color: "black" }}>Group</Button>
+                >
+                    <FilterListOutlinedIcon fontSize="small"/>
+                    Filter
+                </Button>
+                <Button sx={{ textTransform: "none", color: "black" }}>
+                    <ListAltOutlinedIcon fontSize="small"/>
+                    Group
+                </Button>
                 <Button 
                     sx={{ textTransform: "none", color: "black" }}
                     onClick={(e) => {
                         setSortAnchor(e.currentTarget);
                         setOpenSortMenu(!openSortMenu);
                     }}
-                >Sort</Button>
-                <Button sx={{ textTransform: "none", color: "black" }}>Color</Button>
-                <Button sx={{ textTransform: "none", color: "black" }}>Row height</Button>
-                <Button sx={{ textTransform: "none", color: "black" }}>Share and sync</Button>
+                >
+                    <ImportExportOutlinedIcon fontSize="small"/>
+                    Sort
+                </Button>
+                <Button sx={{ textTransform: "none", color: "black" }}>
+                    <FormatColorFillOutlinedIcon fontSize="small"/>
+                    Color
+                </Button>
+                <Button sx={{ textTransform: "none", color: "black" }}>
+                    <FormatLineSpacingIcon fontSize="small"/>
+                </Button>
+                <Button sx={{ textTransform: "none", color: "black" }}>
+                    <IosShareIcon fontSize="small"/>
+                    Share and sync
+                </Button>
+                <Button sx={{color: "black"}}>
+                    <SearchIcon fontSize="small"/>
+                </Button>
             </div>
 
             <FilterMenu filterAnchor={filterAnchor} openFilterMenu={openFilterMenu} onClose={handleCloseFilterMenu} view={view} table={table}/>

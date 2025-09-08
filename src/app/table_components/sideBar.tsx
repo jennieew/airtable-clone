@@ -3,6 +3,9 @@ import { useState } from "react";
 import type { Cell, Column, Row, Table, View } from "@prisma/client";
 import { api } from "@/utils/api";
 import type { JsonValue } from "@prisma/client/runtime/library";
+import AddIcon from '@mui/icons-material/Add';
+import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
+import TableChartOutlinedIcon from '@mui/icons-material/TableChartOutlined';
 
 interface SideBarProps {
   openSidebar: boolean;
@@ -80,20 +83,43 @@ export default function TableSideBar({ openSidebar, setOpenSideBar, hovered, set
                     width: isOpen ? "300px" : "0px",
                     boxSizing: "border-box",
                     position: "relative",
+                    overflowX: "hidden",
                 },
+                paddingY: 2,
             }}
         >
             <Button
                 onClick={() => createView.mutate({tableId: table.tableId})} 
-                sx={{ textTransform: "none", color: "black" }}
-            >+ Create New...</Button>
-            <TextField placeholder="Find a view"/>
+                sx={{ textTransform: "none", color: "black", justifyContent: "start" }}
+            >
+                <AddIcon fontSize="small"/>
+                Create new...
+            </Button>
+            <div className="flex items-center">
+                <TextField
+                    // variant="standard"
+                    placeholder="Find a view"
+                    sx={{
+                        "& .MuiOutlinedInput-root": {
+                            "& fieldset": {
+                                border: "none",
+                            },
+                        },
+                    }}
+                />
+                <SettingsOutlinedIcon fontSize="small"/>
+            </div>
             {table.views.map((view) => (
-                <Box
+                <Button
                     key={view.viewId}
+                    sx={{
+                        color: "black",
+                        textTransform: "none",
+                        justifyContent: "start"
+                    }}
                 >
-                    {view.name}
-                </Box>
+                    <TableChartOutlinedIcon fontSize="small" color="primary"/> {view.name}
+                </Button>
             ))}
         </Drawer>
     )

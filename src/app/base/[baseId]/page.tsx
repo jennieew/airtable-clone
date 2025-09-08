@@ -83,9 +83,10 @@ export default function BasePage() {
                 onClick={() => createTable.mutate({ baseId })}
                 disabled={isCreateDisabled}
                 sx={{
-                  color: "text.primary"
+                  color: "text.primary",
+                  textTransform: "none",
                 }}
-              >+ New Table</Button>
+              >+ Add or import</Button>
             </Box>
             <TablePage table={base.tables[selectedTab]}/>
           </Box>

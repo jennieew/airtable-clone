@@ -220,10 +220,11 @@ export default function TableDisplay({ tableId, view }: TableComponentProps) {
         <thead>
           {tanstackTable.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id}>
-              <th>#</th>
+              <th style={{ width: "50px" }}>#</th>
               {headerGroup.headers.map((header) => (
                 <th 
                   key={header.id}
+                  style={{ width: "180px" }}
                   onClick={(e) => openHeaderMenu(e, header.column.id)}
                 >
                   {flexRender(
