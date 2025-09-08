@@ -27,25 +27,11 @@ type filterMenuProps = {
   onClose: () => void;
   view: View;
   table: TableWithRelations;
+  filters: FilterCondition[];
+  setFilters: React.Dispatch<React.SetStateAction<FilterCondition[]>>;
 };
 
-const isCompleteFilter = (f: FilterCondition): boolean => {
-  // must have a column and operator always
-  if (!f.column || !f.operator) return false;
-
-  // make sure value not empty
-  if (f.operator !== "is empty" && f.operator !== "is not empty") {
-    return f.value !== "" && f.value !== undefined && f.value !== null;
-  }
-
-  return true;
-};
-
-export default function FilterMenu({ openFilterMenu, filterAnchor, onClose, view, table }: filterMenuProps) {
-  const [filters, setFilters] = useState<FilterCondition[]>(
-    ((view.filters as unknown) as FilterCondition[]) || []
-  );
-
+export default function FilterMenu({ openFilterMenu, filterAnchor, onClose, view, table, filters, setFilters }: filterMenuProps) {
   const utils = api.useUtils();
   const addOrUpdateFilters = api.view.addOrUpdateFilter.useMutation({
     onMutate: async ({ viewId, newFilter }) => {

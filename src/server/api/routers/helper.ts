@@ -102,7 +102,7 @@ export async function createDefaultTable(ctx: Context, baseId: string) {
 export function buildPrismaFilter(filters: FilterCondition[]): Prisma.RowWhereInput | undefined {
   if (!filters || filters.length === 0) return undefined;
 
-  // Determine the locked logic from the second filter, default to AND
+  // get the logic from the second filter, default to AND
   const lockedLogic = filters[1]?.logical ?? "and";
 
   const conditions = filters.map(f => mapFilterToPrisma(f));
@@ -125,9 +125,33 @@ export function mapFilterToPrisma(f: FilterCondition): Prisma.RowWhereInput {
       return { values: { some: { columnId: columnField, stringValue: valueStr } } };
     case "is not":
       return { values: { none: { columnId: columnField, stringValue: valueStr } } };
+
     case "is empty":
-      return { values: { none: { columnId: columnField, stringValue: { not: null } } } };
+      return {
+        values: {
+          some: {
+            columnId: columnField,
+            OR: [
+              { stringValue: null },
+              { stringValue: "" },
+              { numberValue: null },
+            ],
+          },
+        },
+      };
+
     case "is not empty":
-      return { values: { some: { columnId: columnField, stringValue: { not: null } } } };
+      return {
+        values: {
+          none: {
+            columnId: columnField,
+            NOT: [
+              { stringValue: null },
+              { stringValue: "" },
+              { numberValue: null },
+            ],
+          },
+        },
+      };
   }
 }

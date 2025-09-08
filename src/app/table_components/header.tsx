@@ -1,7 +1,7 @@
 import { Box, Button, IconButton, TextField } from "@mui/material";
 import { useEffect, useRef, useState } from "react";
 import MenuIcon from '@mui/icons-material/Menu';
-import FilterMenu from "../view_components/filterMenu";
+import FilterMenu, { type FilterCondition } from "../view_components/filterMenu";
 import SortMenu from "../view_components/sortMenu";
 import type { Cell, Column, Row, Table, View } from "@prisma/client";
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -29,9 +29,11 @@ interface HeaderProps {
   setHovered: (open: boolean) => void;
   view: View;
   table: TableWithRelations;
+  filters: FilterCondition[];
+  setFilters: React.Dispatch<React.SetStateAction<FilterCondition[]>>;
 }
 
-export default function TableHeaderBar({ openSidebar, setOpenSideBar, setHovered, view, table }: HeaderProps) {
+export default function TableHeaderBar({ openSidebar, setOpenSideBar, setHovered, view, table, filters, setFilters }: HeaderProps) {
     const [isEditingViewName, setIsEditingViewName] = useState(false);
     const [viewName, setViewName] = useState(view.name);
 
@@ -133,7 +135,15 @@ export default function TableHeaderBar({ openSidebar, setOpenSideBar, setHovered
                 </Button>
             </div>
 
-            <FilterMenu filterAnchor={filterAnchor} openFilterMenu={openFilterMenu} onClose={handleCloseFilterMenu} view={view} table={table}/>
+            <FilterMenu 
+                filterAnchor={filterAnchor} 
+                openFilterMenu={openFilterMenu} 
+                onClose={handleCloseFilterMenu} 
+                view={view} 
+                table={table}
+                filters={filters}
+                setFilters={setFilters}
+            />
             <SortMenu sortAnchor={sortAnchor} openSortMenu={openSortMenu} onClose={handleCloseSortMenu} viewId={""} table={table}/>
         </Box>
     )

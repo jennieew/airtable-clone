@@ -10,9 +10,6 @@ import { Box, Button } from "@mui/material";
 import TableTabs from "@/app/table_components/tableTabs";
 import TablePage from "@/app/table_components/tablePage";
 
-import { columns, type Payment } from "./columns";
-import { DataTable } from "../../table_components/data-table"
-
 export default function BasePage() {
   const [selectedTab, setSelectedTab] = useState(0);
   const params = useParams();
@@ -73,15 +70,6 @@ export default function BasePage() {
   // if a table is being created, disable create new table
   const isCreateDisabled = createTable.status === "pending";
 
-  const data: Payment[] = [
-    {
-      id: "728ed52f",
-      amount: 100,
-      status: "pending",
-      email: "m@example.com",
-    },
-  ]
-
   return (
     <div>
       <BaseSideBar/>
@@ -101,7 +89,6 @@ export default function BasePage() {
               >+ Add or import</Button>
             </Box>
             <TablePage table={base.tables[selectedTab]}/>
-            <DataTable columns={columns} data={data} />
           </Box>
         )}
       </div>

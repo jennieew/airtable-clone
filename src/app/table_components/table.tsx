@@ -7,11 +7,22 @@ import { api } from "@/utils/api";
 import TableHeader from "./tableHeaders";
 import TableCell from "./tableCell";
 
+import {
+  Table as ShadTable,
+  TableBody,
+  TableCell as ShadCell,
+  TableHead,
+  TableHeader as ShadHeader,
+  TableRow,
+} from "@/components/ui/table"
+
 type RowWithRelations = Row & { values: Cell[] };
 
 type TableComponentProps = {
   tableId: string;
   view: View;
+  filters: FilterCondition[];
+  setFilters: React.Dispatch<React.SetStateAction<FilterCondition[]>>;
 };
 
 const OPERATORS = ["contains", "does not contain", "is", "is not", "is empty", "is not empty"] as const;
@@ -23,7 +34,7 @@ export interface FilterCondition {
   value: string | number;
 }
 
-export default function TableDisplay({ tableId, view }: TableComponentProps) {
+export default function TableDisplay({ tableId, view, filters, setFilters }: TableComponentProps) {
   // for creating a new column
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
@@ -174,7 +185,7 @@ export default function TableDisplay({ tableId, view }: TableComponentProps) {
         return rowObj;
       })
     );
-  }, [table, view.filters]);
+  }, [table, filters]);
 
     // create the columns for the tables, making them input cells
     const tableColumns = useMemo(() => {
@@ -215,14 +226,14 @@ export default function TableDisplay({ tableId, view }: TableComponentProps) {
   if (isError || !table) return <div>Table not found</div>;
 
   return (
-    <div>
-      <table>
-        <thead>
+    <div className="bg-white">
+      <ShadTable>
+        <ShadHeader>
           {tanstackTable.getHeaderGroups().map((headerGroup) => (
-            <tr key={headerGroup.id}>
-              <th style={{ width: "50px" }}>#</th>
+            <TableRow key={headerGroup.id}>
+              <TableHead style={{ width: "50px" }}>#</TableHead>
               {headerGroup.headers.map((header) => (
-                <th 
+                <TableHead 
                   key={header.id}
                   style={{ width: "180px" }}
                   onClick={(e) => openHeaderMenu(e, header.column.id)}
@@ -231,17 +242,17 @@ export default function TableDisplay({ tableId, view }: TableComponentProps) {
                     header.column.columnDef.header,
                     header.getContext()
                   )}
-                </th>
+                </TableHead>
               ))}
-              <th>
+              <TableHead>
                 <Button
                 sx={{color: "black"}}
                   onClick={handleOpenColumnMenu}
                 >+</Button>
-              </th>
-            </tr>
+              </TableHead>
+            </TableRow>
           ))}
-        </thead>
+        </ShadHeader>
 
         <ColumnMenu
           openColumnMenu={Boolean(anchorEl)} 
@@ -250,24 +261,24 @@ export default function TableDisplay({ tableId, view }: TableComponentProps) {
           tableId={table.tableId} 
         />
         
-        <tbody>
+        <TableBody>
           {tanstackTable.getRowModel().rows.map((row, rowIndex) => (
-            <tr key={row.id}>
-              <td>{rowIndex + 1}</td>
+            <TableRow key={row.id}>
+              <ShadCell>{rowIndex + 1}</ShadCell>
               {row.getVisibleCells().map((cell) => (
-                <td key={cell.id}>
+                <ShadCell key={cell.id}>
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                </td>
+                </ShadCell>
               ))}
-            </tr>
+            </TableRow>
           ))}
-          <tr onClick={() => addRow.mutate({ tableId })} >
-            <td colSpan={tanstackTable.getAllColumns().length + 1}>
+          <TableRow onClick={() => addRow.mutate({ tableId })} >
+            <ShadCell colSpan={tanstackTable.getAllColumns().length + 1}>
               +
-            </td>
-          </tr>
-        </tbody>
-      </table>
+            </ShadCell>
+          </TableRow>
+        </TableBody>
+      </ShadTable>
 
       <TableHeader headerMenuAnchor={headerMenuAnchor} closeHeaderMenu={closeHeaderMenu} tableId={tableId}></TableHeader>
     </div>
