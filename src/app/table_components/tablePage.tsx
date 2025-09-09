@@ -1,19 +1,9 @@
 import { Box } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import TableHeaderBar from "./header";
 import TableSideBar from "./sideBar";
-import type { Cell, Column, Row, Table, View } from "@prisma/client";
-import TableDisplay, { type FilterCondition } from "./table";
-
-import { useVirtualizer } from '@tanstack/react-virtual'
-
-type RowWithRelations = Row & { values: Cell[] };
-
-type TableWithRelations = Table & {
-  columns: Column[];
-  rows: RowWithRelations[];
-  views: View[];
-};
+import TableDisplay from "./table";
+import type { FilterCondition, RowWithRelations, TableWithRelations, ViewWithFilters } from "../types";
 
 type TablePageProps = {
     table: TableWithRelations | undefined;
@@ -23,33 +13,56 @@ export default function TablePage({ table }: TablePageProps) {
     const [openSidebar, setOpenSideBar] = useState(false);
     const [hovered, setHovered] = useState(false);
 
-    const [filters, setFilters] = useState<FilterCondition[]>([]);
+    const [tableData, setTableData] = useState<RowWithRelations[]>([]);
 
-    const currentView = table?.views.find((v) => v.viewId === table.currentView) ?? table?.views[0];
-    
-    useEffect(() => {
-        if (!currentView) return;
-        setFilters(currentView.filters as unknown as FilterCondition[]);
-    }, [currentView]);
+    const [currentView, setCurrentView] = useState<ViewWithFilters>(() => {
+        const initial = table?.views.find(v => v.viewId === table?.currentView) ?? table?.views[0];
+        return initial
+            ? {
+                ...initial,
+                filters: (initial.filters as unknown as FilterCondition[]) ?? [],
+            }
+            : {
+            viewId: crypto.randomUUID(),
+            tableId: table?.tableId ?? "",
+            name: "Default View",
+            description: "",
+            hiddenFields: "",
+            filters: [],
+            groupBy: "",
+            sort: "",
+            color: "",
+            rowHeight: "SHORT",
+            };
+    });
 
     if (!table || !currentView) return null;
 
     return (
         <Box sx={{ display: "flex", flexDirection: "column"}}>
-            <TableHeaderBar 
+            <TableHeaderBar
                 openSidebar={openSidebar} 
                 setOpenSideBar={setOpenSideBar} 
                 setHovered={setHovered} 
-                view={currentView} 
+                view={currentView}
+                setCurrentView={setCurrentView}
                 table={table}
-                filters={filters}
-                setFilters={setFilters}
             />
-            <Box sx={{ display: "flex", flex: 1, backgroundColor:"#f7f8fc"}}>
-                <TableSideBar openSidebar={openSidebar} setOpenSideBar={setOpenSideBar} hovered={hovered} setHovered={setHovered} table={table}/>
-                {table && (
-                    <TableDisplay tableId={table.tableId} view={currentView} filters={filters} setFilters={setFilters}/>
-                )}
+            <Box sx={{ display: "flex", flex: 1 }}>
+                <TableSideBar 
+                    openSidebar={openSidebar} 
+                    setOpenSideBar={setOpenSideBar} 
+                    hovered={hovered} 
+                    setHovered={setHovered} 
+                    table={table}
+                    currentView={currentView}
+                    setCurrentView={setCurrentView}
+                />
+                <div className="bg-[#f7f8fc]">
+                    {table && (
+                        <TableDisplay tableId={table.tableId} view={currentView} setCurrentView={setCurrentView} />
+                    )}
+                </div>
             </Box>
         </Box>
     )

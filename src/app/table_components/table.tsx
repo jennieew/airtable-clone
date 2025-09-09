@@ -5,7 +5,6 @@ import {
   useReactTable,
   getSortedRowModel,
 } from "@tanstack/react-table";
-import type { Cell, Column, Row, Table, View } from "@prisma/client";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@mui/material";
 import ColumnMenu from "./columnMenu";
@@ -23,26 +22,15 @@ import {
 } from "@/components/ui/table";
 
 import { useVirtualizer } from "@tanstack/react-virtual";
-
-type RowWithRelations = Row & { values: Cell[] };
+import type { FilterCondition, RowWithRelations, ViewWithFilters } from "../types";
 
 type TableComponentProps = {
   tableId: string;
-  view: View;
-  filters: FilterCondition[];
-  setFilters: React.Dispatch<React.SetStateAction<FilterCondition[]>>;
+  view: ViewWithFilters;
+  setCurrentView: React.Dispatch<React.SetStateAction<ViewWithFilters>>;
 };
 
-const OPERATORS = ["contains", "does not contain", "is", "is not", "is empty", "is not empty"] as const;
-
-export interface FilterCondition {
-  logical?: "and" | "or" | "where";
-  column: string;
-  operator: typeof OPERATORS[number];
-  value: string | number;
-}
-
-export default function TableDisplay({ tableId, view, filters, setFilters }: TableComponentProps) {
+export default function TableDisplay({ tableId, view, setCurrentView }: TableComponentProps) {
   // for creating a new column
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
@@ -67,13 +55,13 @@ export default function TableDisplay({ tableId, view, filters, setFilters }: Tab
   const closeHeaderMenu = () => setHeaderMenuAnchor(null);
 
   const { data: table, isLoading, isError } = api.table.getTable.useQuery({ tableId });
-  const [tableData, setTableData] = useState<Record<string, string | number>[]>([]);
+  const [tableData, setTableData] = useState<RowWithRelations[]>([]);
   const columnHelper = createColumnHelper<Record<string, string | number>>();
 
   // VIRTUALISATION
   const scrollRef = useRef<HTMLDivElement>(null);
   const virtualiser = useVirtualizer({
-    count: table?.rows.length ?? 0,
+    count: tableData.length ?? 0,
     estimateSize: () => 60,
     getScrollElement: () => scrollRef.current,
   });
@@ -108,7 +96,7 @@ export default function TableDisplay({ tableId, view, filters, setFilters }: Tab
           })),
         };
         
-        // setTableData(prev => [...prev, newRow]);
+        setTableData(prev => [...prev, newRow]);
 
         return {
           ...old,
@@ -161,82 +149,74 @@ export default function TableDisplay({ tableId, view, filters, setFilters }: Tab
   });
   
   // transform table to flat objects
-  useEffect(() => {
-    if (!table) return;
-
-    const filters: FilterCondition[] = (view.filters as unknown as FilterCondition[]) ?? [];
-
-    let filteredRows = table.rows;
-
-    // apply filters from the current view
-    (filters ?? []).forEach((filter) => {
-      if (!filter) return;
-      filteredRows = filteredRows.filter((row) => {
+  const filteredRows = useMemo(() => {
+    if (!table) return [];
+    const filters = view.filters;
+    return table.rows.filter(row => {
+      return filters.every((filter) => {
         const cell = row.values.find(c => c.columnId === filter.column);
         if (!cell) return false;
 
         switch (filter.operator) {
-          case "contains":
-            return (cell.stringValue ?? "").includes(filter.value as string);
-          case "does not contain":
-            return !(cell.stringValue ?? "").includes(filter.value as string);
-          case "is":
-            return (cell.stringValue ?? cell.numberValue) === filter.value;
-          case "is not":
-            return (cell.stringValue ?? cell.numberValue) !== filter.value;
-          case "is empty":
-            return (cell.stringValue ?? cell.numberValue ?? "") === "";
-          case "is not empty":
-            return (cell.stringValue ?? cell.numberValue ?? "") !== "";
-          default:
-            return true;
+          case "contains": return (cell.stringValue ?? "").includes(filter.value as string);
+          case "does not contain": return !(cell.stringValue ?? "").includes(filter.value as string);
+          case "is": return (cell.stringValue ?? cell.numberValue) === filter.value;
+          case "is not": return (cell.stringValue ?? cell.numberValue) !== filter.value;
+          case "is empty": return (cell.stringValue ?? cell.numberValue ?? "") === "";
+          case "is not empty": return (cell.stringValue ?? cell.numberValue ?? "") !== "";
+          default: return true;
         }
       });
     });
+  }, [table, view.filters]);
 
-    setTableData(
-      filteredRows.map((row) => {
-        const rowObj: Record<string, string | number> = {};
-        table.columns.forEach((col) => {
-          const cell = row.values.find((c) => c.columnId === col.columnId);
-          rowObj[col.columnId] = cell?.stringValue ?? cell?.numberValue ?? "";
-        });
-        return rowObj;
-      })
-    );
-  }, [table, filters]);
+  // only set tableData initially or when adding rows
+  useEffect(() => {
+    setTableData(filteredRows);
+  }, [filteredRows]);
 
-    // create the columns for the tables, making them input cells
-    const tableColumns = useMemo(() => {
-      if (!table) return [];
+  // create the columns for the tables, making them input cells
+  const tableColumns = useMemo(() => {
+    if (!table) return [];
 
-      return [
-        ...table.columns.map((col, colIndex) =>
-          columnHelper.accessor(col.columnId, {
-            header: col.name.trim() === "" ? "Label" : col.name,
-            cell: (info) => {
-              const value = tableData[info.row.index]?.[info.column.id] ?? "";
-
-              return (
-                <TableCell
-                    rowIndex={info.row.index}
-                    columnId={info.column.id}
-                    colType={col.type}
-                    value={value}
-                    tableData={tableData}
-                    setTableData={setTableData}
-                    table={table}
-                    editCell={editCell}
-                  />
-              );
-            },
-          })
-        ),
-      ];
-    }, [table?.columns, tableData]);
+    return [
+      ...table.columns.map((col, colIndex) =>
+        columnHelper.accessor(col.columnId, {
+          header: col.name.trim() === "" ? "Label" : col.name,
+          cell: (info) => {
+            const rowData = tableData[info.row.index];
+            if (!rowData) return null;
+            return (
+              <TableCell
+                  rowIndex={info.row.index}
+                  columnId={info.column.id}
+                  colType={col.type}
+                  rowData={rowData}
+                  setTableData={setTableData}
+                  table={table}
+                  editCell={editCell}
+                />
+            );
+          },
+        })
+      ),
+    ];
+  }, [table?.columns]);
+  
+    // fix data to pass into tanstack table
+  const flatTableData = useMemo(() => {
+    return tableData.map(row => {
+      const obj: Record<string, string | number> = {};
+      table?.columns.forEach(col => {
+        const cell = row.values.find(c => c.columnId === col.columnId);
+        obj[col.columnId] = cell?.stringValue ?? cell?.numberValue ?? "";
+      });
+      return obj;
+    });
+  }, [tableData, table?.columns]);
 
   const tanstackTable = useReactTable({
-    data: tableData,
+    data: flatTableData,
     columns: tableColumns,
     getCoreRowModel: getCoreRowModel(),
   });

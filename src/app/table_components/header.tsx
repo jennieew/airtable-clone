@@ -1,9 +1,7 @@
 import { Box, Button, IconButton, TextField } from "@mui/material";
 import { useEffect, useRef, useState } from "react";
 import MenuIcon from '@mui/icons-material/Menu';
-import FilterMenu, { type FilterCondition } from "../view_components/filterMenu";
 import SortMenu from "../view_components/sortMenu";
-import type { Cell, Column, Row, Table, View } from "@prisma/client";
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import TableChartOutlinedIcon from '@mui/icons-material/TableChartOutlined';
 import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined';
@@ -14,26 +12,19 @@ import FormatColorFillOutlinedIcon from '@mui/icons-material/FormatColorFillOutl
 import FormatLineSpacingIcon from '@mui/icons-material/FormatLineSpacing';
 import IosShareIcon from '@mui/icons-material/IosShare';
 import SearchIcon from '@mui/icons-material/Search';
-
-type RowWithRelations = Row & { values: Cell[] };
-
-type TableWithRelations = Table & {
-  columns: Column[];
-  rows: RowWithRelations[];
-  views: View[];
-};
+import type { TableWithRelations, ViewWithFilters } from "../types";
+import FilterMenu from "../view_components/filterMenu";
 
 interface HeaderProps {
   openSidebar: boolean;
   setOpenSideBar: (open: boolean) => void;
   setHovered: (open: boolean) => void;
-  view: View;
+  view: ViewWithFilters;
   table: TableWithRelations;
-  filters: FilterCondition[];
-  setFilters: React.Dispatch<React.SetStateAction<FilterCondition[]>>;
+  setCurrentView: React.Dispatch<React.SetStateAction<ViewWithFilters>>;
 }
 
-export default function TableHeaderBar({ openSidebar, setOpenSideBar, setHovered, view, table, filters, setFilters }: HeaderProps) {
+export default function TableHeaderBar({ openSidebar, setOpenSideBar, setHovered, view, setCurrentView, table }: HeaderProps) {
     const [isEditingViewName, setIsEditingViewName] = useState(false);
     const [viewName, setViewName] = useState(view.name);
 
@@ -142,10 +133,9 @@ export default function TableHeaderBar({ openSidebar, setOpenSideBar, setHovered
                 filterAnchor={filterAnchor} 
                 openFilterMenu={openFilterMenu} 
                 onClose={handleCloseFilterMenu} 
-                view={view} 
+                view={view}
+                setCurrentView={setCurrentView}
                 table={table}
-                filters={filters}
-                setFilters={setFilters}
             />
             <SortMenu sortAnchor={sortAnchor} openSortMenu={openSortMenu} onClose={handleCloseSortMenu} viewId={""} table={table}/>
         </Box>

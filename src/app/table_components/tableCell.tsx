@@ -15,16 +15,18 @@ type TableCellProps = {
   rowIndex: number;
   columnId: string;
   colType: "STRING" | "NUMBER";
-  value: string | number;
-  tableData: Record<string, string | number>[];
-  setTableData: React.Dispatch<React.SetStateAction<Record<string, string | number>[]>>;
+  rowData: RowWithRelations;
+  setTableData: React.Dispatch<React.SetStateAction<RowWithRelations[]>>;
   table: TableWithRelations;
   editCell: ReturnType<EditCellMutation>;
 };
 
-export default function TableCell({ rowIndex, columnId, colType, value, tableData, setTableData, table, editCell }: TableCellProps) {
-  const initialValue = tableData[rowIndex]?.[columnId] ?? "";
-  const [cellValue, setCellValue] = useState(initialValue);
+export default function TableCell({ rowIndex, columnId, colType, rowData, setTableData, table, editCell }: TableCellProps) {
+  // const row = tableData[rowIndex];
+  const cell = rowData?.values.find(c => c.columnId === columnId);
+  const value = cell?.stringValue ?? cell?.numberValue ?? "";
+
+  const [cellValue, setCellValue] = useState(value);
 
   const moveToCell = (nextRow: number, nextCol: number) => {
     const nextColumn = table.columns[nextCol];
@@ -110,8 +112,14 @@ export default function TableCell({ rowIndex, columnId, colType, value, tableDat
         // update local table data
         // setTableData(prev => {
         //   const newData = [...prev];
-        //   const row = newData[rowIndex];
-        //   if (row) row[columnId] = val;
+        //   const targetRow = newData[rowIndex];
+        //   if (!targetRow) return prev;
+
+        //   const targetCell = targetRow.values.find(c => c.columnId === columnId);
+        //   if (targetCell) {
+        //     if (colType === "STRING") targetCell.stringValue = val as string;
+        //     if (colType === "NUMBER") targetCell.numberValue = val as number;
+        //   }
         //   return newData;
         // });
       }}

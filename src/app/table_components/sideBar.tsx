@@ -1,11 +1,10 @@
-import { Box, Button, Drawer, TextField } from "@mui/material";
-import { useEffect, useState } from "react";
-import type { Cell, Column, Row, Table, View } from "@prisma/client";
+import { Button, Drawer, TextField } from "@mui/material";
 import { api } from "@/utils/api";
-import type { JsonValue } from "@prisma/client/runtime/library";
 import AddIcon from '@mui/icons-material/Add';
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import TableChartOutlinedIcon from '@mui/icons-material/TableChartOutlined';
+import type { FilterCondition, TableWithRelations, ViewWithFilters } from "../types";
+import { useState } from "react";
 
 interface SideBarProps {
   openSidebar: boolean;
@@ -13,28 +12,16 @@ interface SideBarProps {
   hovered: boolean;
   setHovered: (open: boolean) => void;
   table: TableWithRelations | undefined;
+  currentView: ViewWithFilters;
+  setCurrentView: React.Dispatch<React.SetStateAction<ViewWithFilters>>;
 }
 
-type RowWithRelations = Row & { values: Cell[] };
-
-type TableWithRelations = Table & {
-  columns: Column[];
-  rows: RowWithRelations[];
-  views: View[];
-};
-
-export default function TableSideBar({ openSidebar, setOpenSideBar, hovered, setHovered, table }: SideBarProps) {
+export default function TableSideBar({ openSidebar, setOpenSideBar, hovered, setHovered, table, currentView, setCurrentView }: SideBarProps) {
     const toggleSidebar = () => setOpenSideBar(!openSidebar);
     const isOpen = openSidebar || hovered;
     const utils = api.useUtils();
 
-    const [localTable, setLocalTable] = useState(table);
-
-    useEffect(() => {
-        setLocalTable(table); // sync when parent updates
-    }, [table]);
-
-    const [selectedViewId, setSelectedViewId] = useState(localTable?.currentView ?? localTable?.views[0]?.viewId);
+    const [tableState, setTableState] = useState<TableWithRelations>(table!);
 
     if (!table) return null;
 
@@ -49,46 +36,49 @@ export default function TableSideBar({ openSidebar, setOpenSideBar, hovered, set
                 name: name ?? `Grid ${table.viewCount + 1}`,
                 description: "",
                 hiddenFields: "",
-                filters: [] as unknown as JsonValue[],
+                filters: [],
                 groupBy: "",
                 sort: "",
                 color: "",
                 rowHeight: "SHORT" as const,
             };
 
-            setLocalTable((old) =>
-                old
-                ? {
-                    ...old,
-                    views: [...(old.views || []), newViewTemp],
-                    currentView: old.currentView ?? tempId,
-                    }
-                : old
-            );
-
             utils.table.getTable.setData({ tableId: table.tableId }, (old) => {
                 if (!old) return old;
-                const typedOld = old as TableWithRelations;
                 return {
-                ...typedOld,
-                views: [...(typedOld.views || []), newViewTemp],
-                currentView: typedOld.currentView ?? tempId, // 👈
+                    ...old,
+                    views: [...(old.views || []), newViewTemp],
                 };
             });
+            setTableState(prev => prev ? { ...prev, views: [...prev.views, newViewTemp] } : prev);
+            setCurrentView(newViewTemp);
             
             return { previousTable };
         },
         onError: (err, variables, context) => {
-                if (context?.previousTable) {
-                    // rollback: restore previous state
-                    utils.table.getTable.setData({ tableId: table.tableId }, context.previousTable);
-                }
+            if (context?.previousTable) {
+                utils.table.getTable.setData({ tableId: table.tableId }, context.previousTable);
+            }
         },
         onSuccess: async () => {
-            // ensure table data is fresh
             await utils.table.getTable.invalidate({ tableId: table.tableId });
         },
     })
+
+    const handleSelectView = (viewId: string) => {
+        if (currentView.viewId === viewId) return;
+        const selected = table?.views.find(v => v.viewId === viewId);
+        if (!selected) return;
+
+        const typedView: ViewWithFilters = {
+            ...selected,
+            filters: Array.isArray(selected.filters)
+                ? (selected.filters as unknown as FilterCondition[])
+                : [],
+        };
+
+        setCurrentView(typedView);
+    };
 
     return (
         <Drawer
@@ -130,20 +120,17 @@ export default function TableSideBar({ openSidebar, setOpenSideBar, hovered, set
                 />
                 <SettingsOutlinedIcon fontSize="small"/>
             </div>
-            {localTable?.views.map((view, index) => (
+            {isOpen && tableState?.views.map((view, index) => (
                 <Button
                     key={view.viewId}
-                    onClick={() => {
-                        setSelectedViewId(view.viewId);
-                        setLocalTable((old) => old ? { ...old, currentView: view.viewId } : old);
-                    }}
+                    onClick={() => handleSelectView(view.viewId)}
                     sx={{
                     color: "black",
                     textTransform: "none",
                     justifyContent: "start",
                     backgroundColor:
-                        localTable.currentView === view.viewId ? "#e0e0e0" : "transparent",
-                    "&:hover": { backgroundColor: "#f5f5f5" }, // optional hover
+                        currentView.viewId === view.viewId ? "#e0e0e0" : "transparent",
+                    "&:hover": { backgroundColor: "#f5f5f5" },
                     }}
                 >
                     <TableChartOutlinedIcon fontSize="small" color="primary"/> {view.name}

@@ -3,10 +3,7 @@ import { z } from "zod";
 import {
   createTRPCRouter,
   protectedProcedure,
-  publicProcedure,
 } from "@/server/api/trpc";
-import { db } from "@/server/db";
-import { ColumnType, Prisma } from "@prisma/client";
 import { buildPrismaFilter, createDefaultTable, type FilterCondition } from "./helper";
 
 const isCompleteFilter = (f: FilterCondition): boolean => {
@@ -68,7 +65,6 @@ export const tableRouter = createTRPCRouter({
       return {
         ...table,
         rows,
-        activeView: currentView,
       }
     }),
 
