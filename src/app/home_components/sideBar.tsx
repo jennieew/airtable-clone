@@ -19,6 +19,7 @@ interface SideBarProps {
 
 export default function SideBar({ sidebarOpen, setSideBarOpen}: SideBarProps) {
   const [hovered, setHovered] = useState(false);
+  const [selected, setSelected] = useState(0);
   const toggleSidebar = () => setSideBarOpen(!sidebarOpen);
 
   const router = useRouter();
@@ -63,21 +64,27 @@ export default function SideBar({ sidebarOpen, setSideBarOpen}: SideBarProps) {
           <SidebarItem icon={ShortcutOutlinedIcon} label="Shared" sidebarOpen={isOpen} onClick={() => redirect('/shared')}/>
           <SidebarItem icon={GroupsOutlinedIcon} label="Workspaces" sidebarOpen={isOpen} onClick={() => redirect('/workspaces')}/>
         </List>
-        <Divider/>
       </Box>
-
-      <Button 
-        variant="contained"
-        sx={{ 
-          m: 2,
-          width: "calc(100% - 32px)",
-          height: "30px",
-          alignSelf: "center",
-        }}
-        onClick={() => handleCreate()}
-      >
-        + Create
-      </Button>
+      <Divider sx={{m: "20px"}}/>
+      <Box sx={{ display: "flex", flexDirection: "column", alignItems: "start" , padding: "8px" }}>
+        <Button sx={{color: "#45454a", textTransform: "none", fontSize: "13px" }}>Templates and apps</Button>
+        <Button sx={{color: "#45454a", textTransform: "none", fontSize: "13px" }}>Marketplace</Button>
+        <Button sx={{color: "#45454a", textTransform: "none", fontSize: "13px" }}>Import</Button>
+        <Button 
+          variant="contained"
+          sx={{ 
+            m: 0.5,
+            width: "calc(100% - 32px)",
+            height: "30px",
+            alignSelf: "center",
+            textTransform: "none",
+            bgcolor: "#186de1",
+          }}
+          onClick={() => handleCreate()}
+        >
+          + Create
+        </Button>
+      </Box>
     </Drawer>
   )
 }

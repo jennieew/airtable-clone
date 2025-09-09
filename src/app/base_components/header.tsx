@@ -74,7 +74,8 @@ export default function BaseHeader({ base }: BaseCardProps) {
         sx={{
           fontWeight: "bold",
           color: "text.primary",
-          textTransform: "none"
+          textTransform: "none",
+          fontSize: "17px",
         }}
       >{base.name} <ExpandMoreIcon fontSize="small"/> </Button>
       <Menu

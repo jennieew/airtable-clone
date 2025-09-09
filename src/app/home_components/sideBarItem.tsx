@@ -10,18 +10,19 @@ interface SidebarItemProps {
 
 export default function SidebarItem({ icon: Icon, label, sidebarOpen, onClick }: SidebarItemProps) {
   return (
-    <ListItem disablePadding>
+    <ListItem disablePadding sx={{ paddingLeft: "12px", marginBottom: "4px" }}>
       <ListItemButton
         sx={{
+          display: "flex",
+          alignItems: "center",
           justifyContent: "flex-start",
-          pl:"10px",
+          width: "100%",
+          padding: "8px"
         }}
         onClick={onClick}
       >
-        <ListItemIcon>
-          <Icon sx={{ fontSize: 25 }} />
-        </ListItemIcon>
-        {sidebarOpen && <ListItemText primary={label} />}
+        <Icon sx={{ fontSize: 20, flexShrink: 0, mr: 1 }} />
+        {sidebarOpen && <ListItemText primary={label} sx={{ fontSize: "15px" }}/>}
       </ListItemButton>
     </ListItem>
   );

@@ -37,7 +37,7 @@ export default function DashboardPage() {
           {data && (
             <Grid container spacing={2}>
               {data.map((base) => (
-                <Grid size={{ xs: 12, sm : 6, md: 4, lg: 3 }} key={base.baseId}>
+                <Grid size={{ xs: 12, sm : 6, md: 4, lg: 2.4 }} key={base.baseId}>
                   <BaseCard base={base} />
                 </Grid>
               ))}
