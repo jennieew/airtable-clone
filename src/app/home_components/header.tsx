@@ -1,7 +1,12 @@
 import MenuIcon from '@mui/icons-material/Menu';
 import SearchBar from "./searchBar";
-import { AppBar, Box, Button, IconButton, Tooltip } from "@mui/material";
+import { AppBar, Avatar, Box, Button, IconButton, Tooltip } from "@mui/material";
 import { signOut } from "next-auth/react";
+import { api } from '@/trpc/react';
+import NotificationsNoneOutlinedIcon from '@mui/icons-material/NotificationsNoneOutlined';
+import HelpOutlineOutlinedIcon from '@mui/icons-material/HelpOutlineOutlined';
+import { useState } from 'react';
+import ProfileMenu from './profileMenu';
 
 interface HeaderProps {
   sidebarOpen: boolean;
@@ -11,12 +16,20 @@ interface HeaderProps {
 export default function Header({ sidebarOpen, setSideBarOpen}: HeaderProps) {
   const toggleSidebar = () => setSideBarOpen(!sidebarOpen);
 
-  const handleSignOut = async () => {
-    await signOut({ callbackUrl: '/' });
-  };
+  const { data: user, isLoading } = api.user.getCurrentUser.useQuery();
+
+  const [openProfileMenu, setOpenProfileMenu] = useState(false);
+  const [profileAnchor, setProfileAnchor] = useState<null | HTMLElement>(null);
+  const handleCloseProfileMenu = () => {
+    setProfileAnchor(null);
+    setOpenProfileMenu(false);
+  }
+
+  if (!user) return null;
+  const firstInitial = user.name ? user.name[0]!.toUpperCase() : "?";
   
   return (
-    <AppBar 
+    <AppBar
       position="fixed"
       sx={{
         height: "56px",
@@ -63,11 +76,68 @@ export default function Header({ sidebarOpen, setSideBarOpen}: HeaderProps) {
       <Box sx={{ flexGrow: 1, display: "flex", justifyContent: "center"}}>
           <SearchBar/>
       </Box>
-      <Box>
-        <Button onClick={handleSignOut}>
-          Sign Out
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 2,
+        }}
+      >
+        <Button
+          sx={{
+            textTransform: "none",
+            color: "#45454a",
+            fontSize: "13px",
+          }}
+        >
+          <HelpOutlineOutlinedIcon sx={{ height: 16, width: 16, mr: 0.5, transform: "translateY(-1px)" }}/>
+          Help
         </Button>
+        <Tooltip title="Notifications">
+          <IconButton
+            sx={{
+              color: "#45454a",
+              border: "1px solid rgba(0,0,0,0.1)",
+              width: 28,
+              height: 28,
+            }}
+          >
+              <NotificationsNoneOutlinedIcon sx={{ fontSize: 18 }}/>
+          </IconButton>
+        </Tooltip>
+        <Tooltip title="Account">
+          <IconButton
+            onClick={(e) => {
+              setProfileAnchor(e.currentTarget);
+              setOpenProfileMenu(!openProfileMenu);
+            }}
+          >
+            <Box
+              sx={{
+                borderRadius: "50%",
+                padding: "1px",
+                bgcolor: "transparent",
+                border: "1px solid rgba(0,0,0,0.1)",
+                display: "inline-flex",
+              }}
+            >
+              <Avatar
+                sx={{
+                  bgcolor: "#fcbb09",
+                  color: "#45454a",
+                  width: 26,
+                  height: 26,
+                  fontSize: "13px",
+                }}
+              >
+                {firstInitial}
+              </Avatar>
+            </Box>
+          </IconButton>
+        </Tooltip>
       </Box>
+      <ProfileMenu openProfileMenu={openProfileMenu} profileAnchor={profileAnchor} onClose={handleCloseProfileMenu} user={user}/>
     </AppBar>
   )
 }

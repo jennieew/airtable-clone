@@ -20,7 +20,7 @@ export default function DashboardPage() {
       <SideBar sidebarOpen={sidebarOpen} setSideBarOpen={setSideBarOpen}/>
 
       <Box 
-        sx={{ 
+        sx={{
           mt: "56px", p: 2,
           ml: sidebarOpen ? "300px" : "50px",
           flexShrink: 0,
