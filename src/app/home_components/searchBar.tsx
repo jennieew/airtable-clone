@@ -7,7 +7,10 @@ export default function SearchBar() {
       variant="outlined"
       placeholder="Search..."
       size="small"
-      sx={{ width: 300 }}
+      sx={{ 
+        width: "20vw",
+        px: "16px",
+      }}
       slotProps={{
         input: {
           startAdornment: (
@@ -16,7 +19,11 @@ export default function SearchBar() {
                 <SearchIcon/>
               </IconButton>
             </InputAdornment>
-          )
+          ),
+          sx: {
+            borderRadius: 5,
+            height: "32px",
+          }
         }
       }}
     />

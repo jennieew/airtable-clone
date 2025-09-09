@@ -13,7 +13,7 @@ export default function TablePage({ table }: TablePageProps) {
     const [openSidebar, setOpenSideBar] = useState(false);
     const [hovered, setHovered] = useState(false);
 
-    const [tableData, setTableData] = useState<RowWithRelations[]>([]);
+    // const [tableData, setTableData] = useState<RowWithRelations[]>([]);
 
     const [currentView, setCurrentView] = useState<ViewWithFilters>(() => {
         const initial = table?.views.find(v => v.viewId === table?.currentView) ?? table?.views[0];

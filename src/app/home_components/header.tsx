@@ -25,8 +25,7 @@ export default function Header({ sidebarOpen, setSideBarOpen}: HeaderProps) {
     setOpenProfileMenu(false);
   }
 
-  if (!user) return null;
-  const firstInitial = user.name ? user.name[0]!.toUpperCase() : "?";
+  const firstInitial = user?.name ? user.name[0]!.toUpperCase() : "?";
   
   return (
     <AppBar
