@@ -12,16 +12,18 @@ interface SideBarProps {
   hovered: boolean;
   setHovered: (open: boolean) => void;
   table: TableWithRelations | undefined;
-  currentView: ViewWithFilters;
-  setCurrentView: React.Dispatch<React.SetStateAction<ViewWithFilters>>;
+  currentViewId: string;
+  setCurrentViewId: React.Dispatch<React.SetStateAction<string>>;
 }
 
-export default function TableSideBar({ openSidebar, setOpenSideBar, hovered, setHovered, table, currentView, setCurrentView }: SideBarProps) {
+export default function TableSideBar({ openSidebar, setOpenSideBar, hovered, setHovered, table, currentViewId, setCurrentViewId }: SideBarProps) {
     const toggleSidebar = () => setOpenSideBar(!openSidebar);
     const isOpen = openSidebar || hovered;
     const utils = api.useUtils();
 
-    const [tableState, setTableState] = useState<TableWithRelations>(table!);
+    const [viewList, setViewList] = useState(table?.views ?? []);
+
+    // const [tableState, setTableState] = useState<TableWithRelations>(table!);
 
     if (!table) return null;
 
@@ -50,8 +52,11 @@ export default function TableSideBar({ openSidebar, setOpenSideBar, hovered, set
                     views: [...(old.views || []), newViewTemp],
                 };
             });
-            setTableState(prev => prev ? { ...prev, views: [...prev.views, newViewTemp] } : prev);
-            setCurrentView(newViewTemp);
+            // setTableState(prev => prev ? { ...prev, views: [...prev.views, newViewTemp] } : prev);
+            // setCurrentView(newViewTemp);
+
+            setViewList(prev => [...prev, newViewTemp]);
+            setCurrentViewId(tempId);
             
             return { previousTable };
         },
@@ -66,18 +71,18 @@ export default function TableSideBar({ openSidebar, setOpenSideBar, hovered, set
     })
 
     const handleSelectView = (viewId: string) => {
-        if (currentView.viewId === viewId) return;
+        if (currentViewId === viewId) return;
         const selected = table?.views.find(v => v.viewId === viewId);
         if (!selected) return;
 
-        const typedView: ViewWithFilters = {
-            ...selected,
-            filters: Array.isArray(selected.filters)
-                ? (selected.filters as unknown as FilterCondition[])
-                : [],
-        };
+        // const typedView: ViewWithFilters = {
+        //     ...selected,
+        //     filters: Array.isArray(selected.filters)
+        //         ? (selected.filters as unknown as FilterCondition[])
+        //         : [],
+        // };
 
-        setCurrentView(typedView);
+        setCurrentViewId(viewId);
     };
 
     return (
@@ -120,7 +125,7 @@ export default function TableSideBar({ openSidebar, setOpenSideBar, hovered, set
                 />
                 <SettingsOutlinedIcon fontSize="small"/>
             </div>
-            {isOpen && tableState?.views.map((view, index) => (
+            {isOpen && viewList.map((view) => (
                 <Button
                     key={view.viewId}
                     onClick={() => handleSelectView(view.viewId)}
@@ -129,7 +134,7 @@ export default function TableSideBar({ openSidebar, setOpenSideBar, hovered, set
                     textTransform: "none",
                     justifyContent: "start",
                     backgroundColor:
-                        currentView.viewId === view.viewId ? "#e0e0e0" : "transparent",
+                        currentViewId === view.viewId ? "#e0e0e0" : "transparent",
                     "&:hover": { backgroundColor: "#f5f5f5" },
                     }}
                 >

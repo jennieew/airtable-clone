@@ -14,7 +14,7 @@ export interface FilterCondition {
   logical?: "and" | "or" | "where";
   column: string;
   operator: typeof OPERATORS[number];
-  value: string | number;
+  value?: string | number;
 }
 
 export type ViewWithFilters = Omit<View, "filters"> & {

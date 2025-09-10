@@ -94,7 +94,7 @@ export const viewRouter = createTRPCRouter({
         logical: z.optional(z.enum(["and", "or", "where"])),
         column: z.string(),
         operator: z.enum(OPERATORS),
-        value: z.union([z.string(), z.number()]),
+        value: z.union([z.string(), z.number()]).optional(),
       }),
     }))
     .mutation(async ({ ctx, input }) => {

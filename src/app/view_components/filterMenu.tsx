@@ -2,19 +2,26 @@ import { Button, IconButton, Menu, MenuItem, Select, TextField } from "@mui/mate
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import { api } from "@/utils/api";
 import { OPERATORS, type FilterCondition, type TableWithRelations, type ViewWithFilters } from "../types";
+import { useEffect, useState } from "react";
 
 type filterMenuProps = {
   openFilterMenu: boolean;
   filterAnchor: HTMLElement | null;
   onClose: () => void;
   view: ViewWithFilters;
-  setCurrentView: React.Dispatch<React.SetStateAction<ViewWithFilters>>;
-  table: TableWithRelations;
+  // setCurrentViewId: React.Dispatch<React.SetStateAction<string>>;
+  columns: TableWithRelations["columns"];
 };
 
-export default function FilterMenu({ openFilterMenu, filterAnchor, onClose, view, setCurrentView, table }: filterMenuProps) {
+export default function FilterMenu({ openFilterMenu, filterAnchor, onClose, view, columns }: filterMenuProps) {
   const utils = api.useUtils();
-  const filters = (view.filters ?? []) as unknown as FilterCondition[];
+  // const filters = (view.filters ?? []) as unknown as FilterCondition[];
+  const [filters, setFilters] = useState<FilterCondition[]>(view.filters ?? [] as unknown as FilterCondition[]);
+  // const [currentView, setCurrentView] = useState(view);
+
+  useEffect(() => {
+    setFilters(view.filters ?? []);
+  }, [view.viewId]);
 
   const addOrUpdateFilters = api.view.addOrUpdateFilter.useMutation({
     onMutate: async ({ viewId, newFilter }) => {
@@ -60,7 +67,7 @@ export default function FilterMenu({ openFilterMenu, filterAnchor, onClose, view
   });
 
   const addFilter = () => {
-    const firstCol = table?.columns?.[0]?.columnId;
+    const firstCol = columns?.[0]?.columnId;
     if (!firstCol) return;
 
     let newLogical: "where" | "and" | "or" | undefined;
@@ -80,10 +87,11 @@ export default function FilterMenu({ openFilterMenu, filterAnchor, onClose, view
       value: "",
     };
 
-    setCurrentView({
-      ...view,
-      filters: [...filters, newFilter],
-    });
+    // setCurrentView({
+    //   ...currentView,
+    //   filters: [...filters, newFilter],
+    // });
+    setFilters([...filters, newFilter]);
 
     addOrUpdateFilters.mutate({
       viewId: view.viewId,
@@ -111,6 +119,8 @@ export default function FilterMenu({ openFilterMenu, filterAnchor, onClose, view
           }
         }
 
+        setFilters(updatedFilters);
+
         return {
           ...old,
           filters: updatedFilters,
@@ -137,10 +147,11 @@ export default function FilterMenu({ openFilterMenu, filterAnchor, onClose, view
     if (index === 0 && updatedFilters[0]) {
       updatedFilters[0] = { ...updatedFilters[0], logical: "where" };
     }
-    setCurrentView({ 
-      ...view, 
-      filters: updatedFilters,
-    })
+    // setCurrentView({ 
+    //   ...currentView, 
+    //   filters: updatedFilters,
+    // })
+    setFilters(updatedFilters);
 
     // if it is a valid filter, then delete from db
     deleteFilter.mutate({
@@ -162,10 +173,11 @@ export default function FilterMenu({ openFilterMenu, filterAnchor, onClose, view
     // setFilters(filters.map((f, j) => j === i ? candidate : f));
 
     const updatedFilters = filters.map((f, j) => (j === i ? candidate : f));
-    setCurrentView({
-      ...view,
-      filters: updatedFilters,
-    });
+    // setCurrentView({
+    //   ...currentView,
+    //   filters: updatedFilters,
+    // });
+    setFilters(updatedFilters);
 
     // send to backend only when column/operator/value exist
     if (candidate.column && candidate.operator) {
@@ -215,7 +227,7 @@ export default function FilterMenu({ openFilterMenu, filterAnchor, onClose, view
                   handleUpdateFilter(i, { column: e.target.value });
                 }}
               >
-                {table.columns.map((col) => (
+                {columns.map((col) => (
                   <MenuItem key={col.columnId} value={col.columnId}>{col.name}</MenuItem>
                 ))}
               </Select>
@@ -238,16 +250,21 @@ export default function FilterMenu({ openFilterMenu, filterAnchor, onClose, view
               <TextField
                 value={f.value}
                 onChange={(e) => {
-                  setCurrentView((prev) => {
-                    if (!prev) return prev;
+                  // setCurrentView((prev) => {
+                  //   if (!prev) return prev;
 
-                    return {
-                      ...prev,
-                      filters: prev.filters.map((fi, j) =>
-                        j === i ? { ...fi, value: e.target.value } : fi
-                      ),
-                    };
-                  });
+                  //   return {
+                  //     ...prev,
+                  //     filters: prev.filters.map((fi, j) =>
+                  //       j === i ? { ...fi, value: e.target.value } : fi
+                  //     ),
+                  //   };
+                  // });
+                  setFilters(prev =>
+                    prev.map((fi, j) =>
+                      j === i ? { ...fi, value: e.target.value } : fi
+                    )
+                  );
                 }}
                 onBlur={(e) => handleUpdateFilter(i, { value: e.target.value })}
                 disabled={f.operator === "is empty" || f.operator === "is not empty"}

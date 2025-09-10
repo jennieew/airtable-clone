@@ -8,7 +8,7 @@ export interface FilterCondition {
   logical?: "and" | "or" | "where";
   column: string;
   operator: Operator;
-  value: string | number;
+  value?: string | number;
 }
 
 export async function createDefaultTable(ctx: Context, baseId: string) {
@@ -115,7 +115,7 @@ export function buildPrismaFilter(filters: FilterCondition[]): Prisma.RowWhereIn
 
 export function mapFilterToPrisma(f: FilterCondition): Prisma.RowWhereInput {
   const columnField = f.column;
-  const valueStr = f.value?.toString() || "";
+  const valueStr = f.value?.toString() ?? "";
   switch (f.operator) {
     case "contains":
       return { values: { some: { columnId: columnField, stringValue: { contains: valueStr } } } };

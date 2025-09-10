@@ -21,10 +21,10 @@ interface HeaderProps {
   setHovered: (open: boolean) => void;
   view: ViewWithFilters;
   table: TableWithRelations;
-  setCurrentView: React.Dispatch<React.SetStateAction<ViewWithFilters>>;
+  isLoading: boolean;
 }
 
-export default function TableHeaderBar({ openSidebar, setOpenSideBar, setHovered, view, setCurrentView, table }: HeaderProps) {
+export default function TableHeaderBar({ openSidebar, setOpenSideBar, setHovered, view, table, isLoading }: HeaderProps) {
     const [isEditingViewName, setIsEditingViewName] = useState(false);
     const [viewName, setViewName] = useState(view.name);
 
@@ -51,6 +51,10 @@ export default function TableHeaderBar({ openSidebar, setOpenSideBar, setHovered
             inputRef.current.select();
         }
     }, [isEditingViewName]);
+
+    useEffect(() => {
+        setViewName(view.name);
+    },[view]);
 
     return (
         <Box className="flex" sx={{borderBottom: "1px solid rgba(0,0,0,0.1)"}}>
@@ -81,61 +85,55 @@ export default function TableHeaderBar({ openSidebar, setOpenSideBar, setHovered
                 )
             }
 
-            <div className="flex items-center gap-1 ml-auto">
-                <Button>
-                    Add 100k Rows
-                </Button>
+            {!isLoading && (
+                <div className="flex items-center gap-1 ml-auto">
+                <Button>Add 100k Rows</Button>
                 <Button sx={{ textTransform: "none", color: "black" }}>
-                    <VisibilityOffOutlinedIcon fontSize="small"/>
-                    Hide Fields
+                    <VisibilityOffOutlinedIcon fontSize="small" /> Hide Fields
                 </Button>
-                <Button 
+                <Button
                     sx={{ textTransform: "none", color: "black" }}
                     onClick={(e) => {
-                        setFilterAnchor(e.currentTarget);
-                        setOpenFilterMenu(!openFilterMenu);
+                    setFilterAnchor(e.currentTarget);
+                    setOpenFilterMenu(!openFilterMenu);
                     }}
                 >
-                    <FilterListOutlinedIcon fontSize="small"/>
-                    Filter
+                    <FilterListOutlinedIcon fontSize="small" /> Filter
                 </Button>
                 <Button sx={{ textTransform: "none", color: "black" }}>
-                    <ListAltOutlinedIcon fontSize="small"/>
-                    Group
+                    <ListAltOutlinedIcon fontSize="small" /> Group
                 </Button>
-                <Button 
+                <Button
                     sx={{ textTransform: "none", color: "black" }}
                     onClick={(e) => {
-                        setSortAnchor(e.currentTarget);
-                        setOpenSortMenu(!openSortMenu);
+                    setSortAnchor(e.currentTarget);
+                    setOpenSortMenu(!openSortMenu);
                     }}
                 >
-                    <ImportExportOutlinedIcon fontSize="small"/>
-                    Sort
+                    <ImportExportOutlinedIcon fontSize="small" /> Sort
                 </Button>
                 <Button sx={{ textTransform: "none", color: "black" }}>
-                    <FormatColorFillOutlinedIcon fontSize="small"/>
-                    Color
+                    <FormatColorFillOutlinedIcon fontSize="small" /> Color
                 </Button>
                 <Button sx={{ textTransform: "none", color: "black" }}>
-                    <FormatLineSpacingIcon fontSize="small"/>
+                    <FormatLineSpacingIcon fontSize="small" />
                 </Button>
                 <Button sx={{ textTransform: "none", color: "black" }}>
-                    <IosShareIcon fontSize="small"/>
-                    Share and sync
+                    <IosShareIcon fontSize="small" /> Share and sync
                 </Button>
-                <Button sx={{color: "black"}}>
-                    <SearchIcon fontSize="small"/>
+                <Button sx={{ color: "black" }}>
+                    <SearchIcon fontSize="small" />
                 </Button>
-            </div>
+                </div>
+            )}
 
             <FilterMenu 
                 filterAnchor={filterAnchor} 
                 openFilterMenu={openFilterMenu} 
                 onClose={handleCloseFilterMenu} 
                 view={view}
-                setCurrentView={setCurrentView}
-                table={table}
+                // setCurrentView={setCurrentView}
+                columns={table.columns}
             />
             <SortMenu sortAnchor={sortAnchor} openSortMenu={openSortMenu} onClose={handleCloseSortMenu} viewId={""} table={table}/>
         </Box>

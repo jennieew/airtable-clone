@@ -27,10 +27,10 @@ import type { FilterCondition, RowWithRelations, ViewWithFilters } from "../type
 type TableComponentProps = {
   tableId: string;
   view: ViewWithFilters;
-  setCurrentView: React.Dispatch<React.SetStateAction<ViewWithFilters>>;
+  // setCurrentView: React.Dispatch<React.SetStateAction<ViewWithFilters>>;
 };
 
-export default function TableDisplay({ tableId, view, setCurrentView }: TableComponentProps) {
+export default function TableDisplay({ tableId, view }: TableComponentProps) {
   // for creating a new column
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
