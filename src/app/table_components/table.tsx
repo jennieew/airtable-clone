@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/table";
 
 import { useVirtualizer } from "@tanstack/react-virtual";
-import type { FilterCondition, RowWithRelations, ViewWithFilters } from "../types";
+import type { RowWithRelations, ViewWithFilters } from "../types";
 
 type TableComponentProps = {
   tableId: string;
@@ -62,7 +62,8 @@ export default function TableDisplay({ tableId, view }: TableComponentProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const virtualiser = useVirtualizer({
     count: tableData.length ?? 0,
-    estimateSize: () => 60,
+    estimateSize: () => 32,
+    // getItemSize: () => 32,
     getScrollElement: () => scrollRef.current,
   });
 
@@ -226,18 +227,41 @@ export default function TableDisplay({ tableId, view }: TableComponentProps) {
 
   return (
     <div className="bg-white container" ref={scrollRef} style={{ display: "flex", alignItems: "center" }}>
-      <div style={{ height: `${virtualiser.getTotalSize()}px`, flex: 1 }}>
-        <ShadTable style={{ tableLayout: "fixed", width: "100%" }}>
+      <div 
+        style={{ 
+          height: `${virtualiser.getTotalSize() + 73}px`,
+          flex: 1
+        }}>
+        <ShadTable 
+          style={{ 
+            tableLayout: "fixed",
+            width: "100%",
+          }}
+        >
           <ShadHeader>
             {tanstackTable.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                <TableHead style={{ width: "50px" }}>#</TableHead>
+              <TableRow 
+                key={headerGroup.id}
+                style={{
+                  height: "32px",
+                }}
+              >
+                <TableHead style={{ 
+                  width: "50px", 
+                  borderRight: "none",
+                  height: "32px",
+                  padding: "0 8px",
+                  lineHeight: "32px",
+                }}>#</TableHead>
 
-                {headerGroup.headers.map((header) => (
+                {headerGroup.headers.map((header, headerIndex) => (
                   <TableHead 
                     key={header.id}
                     colSpan={header.colSpan}
-                    style={{ width: "180px" }}
+                    style={{ 
+                      width: "180px",
+                      borderLeft: headerIndex === 0 ? "none" : undefined,
+                    }}
                     onClick={(e) => openHeaderMenu(e, header.column.id)}
                   >
                     {flexRender(
@@ -249,7 +273,7 @@ export default function TableDisplay({ tableId, view }: TableComponentProps) {
 
                 <TableHead style={{ width: "50px" }}>
                   <Button
-                  sx={{color: "black"}}
+                    sx={{color: "black"}}
                     onClick={handleOpenColumnMenu}
                   >+</Button>
                 </TableHead>
@@ -265,17 +289,37 @@ export default function TableDisplay({ tableId, view }: TableComponentProps) {
                   key={row?.id}
                   style={{
                     height: `${virtualRow.size}px`,
+                    // height: "32px",
                     transform: `translateY(${
                       virtualRow.start - index * virtualRow.size
                     }px)`,
                   }}
                 >
-                  <ShadCell>{index + 1}</ShadCell>
-                  {row?.getVisibleCells().map((cell) => (
-                    <ShadCell key={cell.id} style={{ width: "180px" }}>
+                  <ShadCell
+                    style={{
+                      borderRight: "none",
+                    }}
+                  >{index + 1}</ShadCell>
+                  {row?.getVisibleCells().map((cell, cellIndex) => (
+                    <ShadCell 
+                      key={cell.id} 
+                      style={{ 
+                        width: "180px",
+                        borderLeft: cellIndex === 0 ? "none" : undefined,
+                      }}
+                    >
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </ShadCell>
                   ))}
+                  <ShadCell 
+                    style={{ 
+                      background: "#f7f8fc",
+                      border: "none",
+                      borderRight: "none",
+                      borderBottom: "none",
+                      borderTop: "none",
+                    }}
+                  ></ShadCell>
                 </TableRow>
               )
             })}
@@ -283,6 +327,15 @@ export default function TableDisplay({ tableId, view }: TableComponentProps) {
               <ShadCell colSpan={tanstackTable.getAllColumns().length + 1}>
                 +
               </ShadCell>
+              <ShadCell
+                style={{ 
+                  background: "#f7f8fc",
+                  border: "none",
+                  borderRight: "none",
+                  borderBottom: "none",
+                  borderTop: "none",
+                }}
+              ></ShadCell>
             </TableRow>
           </TableBody>
         </ShadTable>

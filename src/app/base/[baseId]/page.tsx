@@ -9,6 +9,7 @@ import { useState } from "react";
 import { Box, Button } from "@mui/material";
 import TableTabs from "@/app/table_components/tableTabs";
 import TablePage from "@/app/table_components/tablePage";
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
 export default function BasePage() {
   const [selectedTab, setSelectedTab] = useState(0);
@@ -74,11 +75,21 @@ export default function BasePage() {
     <div>
       <BaseSideBar/>
       <BaseHeader base={base}/>
-      <div className="pl-[60px]">
+      <div className="pl-[56px]">
         {base && (
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <Box sx={{ display: "flex", flexDirection: "column" }}>
+            <Box sx={{ display: "flex", alignItems: "center" }}>
               <TableTabs tables={base.tables} selectedTab={selectedTab} setSelectedTab={setSelectedTab} baseId={base.baseId}/>
+              <Button
+                sx={{
+                  color: "text.primary",
+                  minWidth: "40px",
+                  width: "40px",
+                  padding: "0px 12px"
+                }}
+              >
+                <ExpandMoreIcon sx={{ fontSize: "16px"}}/>
+              </Button>
               <Button 
                 onClick={() => createTable.mutate({ baseId })}
                 disabled={isCreateDisabled}

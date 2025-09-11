@@ -1,4 +1,4 @@
-import { Box, Button, Menu, MenuItem } from "@mui/material";
+import { Box, Button, Divider, Menu, MenuItem, Select, TextField } from "@mui/material";
 import { useState } from "react";
 import { api } from "@/utils/api";
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -13,6 +13,9 @@ type TableTabsProps = {
 export default function TableTabs({ tables, selectedTab, setSelectedTab, baseId }: TableTabsProps) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [menuTableId, setMenuTableId] = useState("");
+
+  const [renameAnchorEl, setRenameAnchorEl] = useState<null | HTMLElement>(null);
+  const [tableName, setTableName] = useState<string>("");
 
   const handleTabClick = (index: number, event: React.MouseEvent<HTMLButtonElement>) => {
     if (selectedTab === index && tables[index]) {
@@ -29,6 +32,15 @@ export default function TableTabs({ tables, selectedTab, setSelectedTab, baseId 
     setAnchorEl(null);
     setMenuTableId("");
   };
+
+  const handleCloseRenameMenu = () => {
+    setRenameAnchorEl(null);
+  }
+
+  const handleSaveName = () => {
+    renameTable.mutate({ tableId: menuTableId, name: tableName });
+    setRenameAnchorEl(null);
+  }
 
   const utils = api.useUtils();
   const deleteTable = api.table.deleteTable.useMutation({
@@ -105,6 +117,7 @@ export default function TableTabs({ tables, selectedTab, setSelectedTab, baseId 
             backgroundColor: "transparent",
             fontWeight: selectedTab === index ? "bold" : "normal",
             textTransform: "none",
+            height: "36px",
           }}
         >
           {table.name} <ExpandMoreIcon fontSize="small"/>
@@ -115,19 +128,109 @@ export default function TableTabs({ tables, selectedTab, setSelectedTab, baseId 
         anchorEl={anchorEl}
         open={Boolean(anchorEl)}
         onClose={handleCloseMenu}
+        autoFocus={false}
+        disableAutoFocusItem
+        anchorOrigin={{ // for shifting menu left and down
+          vertical: "bottom",
+          horizontal: "left",
+        }}
+        transformOrigin={{
+          vertical: "top",
+          horizontal: "left",
+        }}
+        sx={{
+          mt: 1.1,
+        }}
+        slotProps={{
+          list: {
+            sx: {
+              padding: 0,
+            }
+          },
+          paper: {
+            sx: {
+              padding: "16px",
+              borderRadius: 2,
+              width: 330,
+              maxHeight: "432px",
+              fontSize: "13px",
+            },
+          }
+        }}
       >
-        <MenuItem onClick={() => {
-          renameTable.mutate({ tableId: menuTableId, name: "to fix" });
-          handleCloseMenu(); 
-        }}>
-          Rename
+        <MenuItem sx={{ fontSize: "13px" }}>Import data</MenuItem>
+
+        <Divider/>
+
+        <MenuItem 
+          onClick={(e) => {
+            const selectedTable = tables.find(t => t.tableId === menuTableId);
+            if (selectedTable) {
+              setTableName(selectedTable.name);
+            }
+            setRenameAnchorEl(e.currentTarget);
+            setAnchorEl(null);
+          }}
+          sx={{ fontSize: "13px" }}
+        >
+          Rename table
         </MenuItem>
-        <MenuItem onClick={() => { 
-          deleteTable.mutate({ tableId: menuTableId })
-          setSelectedTab(0);
-          handleCloseMenu(); 
-        }}>
-          Delete
+        <MenuItem sx={{ fontSize: "13px" }}>Hide table</MenuItem>
+        <MenuItem sx={{ fontSize: "13px" }}>Manage fields</MenuItem>
+        <MenuItem sx={{ fontSize: "13px" }}>Duplicate table</MenuItem>
+
+        <Divider/>
+
+        <MenuItem sx={{ fontSize: "13px" }}>Configure data dependencies</MenuItem>
+
+        <Divider/>
+
+        <MenuItem sx={{ fontSize: "13px" }}>Edit table description</MenuItem>
+        <MenuItem sx={{ fontSize: "13px" }}>Edit table permissions</MenuItem>
+
+        <Divider/>
+
+        <MenuItem sx={{ fontSize: "13px" }}>Clear data</MenuItem>
+
+        <MenuItem
+          sx={{ fontSize: "13px" }}
+          disabled={tables.length === 1}
+          onClick={() => {
+            deleteTable.mutate({ tableId: menuTableId })
+            setSelectedTab(0);
+            handleCloseMenu();
+          }}
+        >
+          Delete table
+        </MenuItem>
+      </Menu>
+
+      <Menu
+        open={Boolean(renameAnchorEl)}
+        anchorEl={renameAnchorEl}
+        onClose={handleCloseRenameMenu}
+        autoFocus={false}
+        disableAutoFocusItem
+      >
+        <MenuItem>
+          <TextField
+            fullWidth
+            value={tableName}
+            onChange={(e) => setTableName(e.target.value)}
+          />
+        </MenuItem>
+        <MenuItem>What should each record be called?</MenuItem>
+        <MenuItem>
+          <Select>
+            <MenuItem>Record</MenuItem>
+            <MenuItem>Project</MenuItem>
+            <MenuItem>Task</MenuItem>
+            <MenuItem>Event</MenuItem>
+          </Select>
+        </MenuItem>
+        <MenuItem>
+          <Button onClick={() => setRenameAnchorEl(null)}>Cancel</Button>
+          <Button onClick={handleSaveName}>Save</Button>
         </MenuItem>
       </Menu>
     </Box>

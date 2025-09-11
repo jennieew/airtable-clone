@@ -1,10 +1,12 @@
-import { Button, Drawer, TextField } from "@mui/material";
+import { Box, Button, Drawer, Menu, MenuItem, MenuList, TextField } from "@mui/material";
 import { api } from "@/utils/api";
 import AddIcon from '@mui/icons-material/Add';
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import TableChartOutlinedIcon from '@mui/icons-material/TableChartOutlined';
-import type { FilterCondition, TableWithRelations, ViewWithFilters } from "../types";
-import { useState } from "react";
+import type { TableWithRelations } from "../types";
+import { useEffect, useState } from "react";
+import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined';
+import MoreHorizOutlinedIcon from '@mui/icons-material/MoreHorizOutlined';
 
 interface SideBarProps {
   openSidebar: boolean;
@@ -23,7 +25,12 @@ export default function TableSideBar({ openSidebar, setOpenSideBar, hovered, set
 
     const [viewList, setViewList] = useState(table?.views ?? []);
 
-    // const [tableState, setTableState] = useState<TableWithRelations>(table!);
+    const [hoveredView, setHoveredView] = useState(false);
+    const [viewAnchorEl, setViewAnchorEl] = useState<null | HTMLElement>(null);
+
+    useEffect(() => {
+        setViewList(table?.views ?? []);
+    }, [table]);
 
     if (!table) return null;
 
@@ -52,21 +59,25 @@ export default function TableSideBar({ openSidebar, setOpenSideBar, hovered, set
                     views: [...(old.views || []), newViewTemp],
                 };
             });
-            // setTableState(prev => prev ? { ...prev, views: [...prev.views, newViewTemp] } : prev);
-            // setCurrentView(newViewTemp);
 
             setViewList(prev => [...prev, newViewTemp]);
             setCurrentViewId(tempId);
             
-            return { previousTable };
+            return { previousTable, tempId };
         },
         onError: (err, variables, context) => {
             if (context?.previousTable) {
                 utils.table.getTable.setData({ tableId: table.tableId }, context.previousTable);
             }
         },
-        onSuccess: async () => {
-            await utils.table.getTable.invalidate({ tableId: table.tableId });
+        onSuccess: async (newView, variables, context) => {
+            if (context?.tempId) {
+                setViewList(prev =>
+                    prev.map(v => (v.viewId === context.tempId ? newView : v))
+                );
+                setCurrentViewId(newView.viewId);
+            }
+            utils.table.getTable.invalidate({ tableId: table.tableId });
         },
     })
 
@@ -74,14 +85,6 @@ export default function TableSideBar({ openSidebar, setOpenSideBar, hovered, set
         if (currentViewId === viewId) return;
         const selected = table?.views.find(v => v.viewId === viewId);
         if (!selected) return;
-
-        // const typedView: ViewWithFilters = {
-        //     ...selected,
-        //     filters: Array.isArray(selected.filters)
-        //         ? (selected.filters as unknown as FilterCondition[])
-        //         : [],
-        // };
-
         setCurrentViewId(viewId);
     };
 
@@ -93,54 +96,122 @@ export default function TableSideBar({ openSidebar, setOpenSideBar, hovered, set
             onMouseLeave={() => setHovered(false)}
             variant="permanent"
             sx={{
-                width: isOpen ? "300px" : "0px",
+                width: isOpen ? "280px" : "0px",
                 flexShrink: 0,
                 "& .MuiDrawer-paper": {
-                    width: isOpen ? "300px" : "0px",
+                    width: isOpen ? "280px" : "0px",
                     boxSizing: "border-box",
                     position: "relative",
                     overflowX: "hidden",
+                    py: "10px",
+                    px: isOpen ? "8px" : "0px",
                 },
-                paddingY: 2,
             }}
         >
             <Button
                 onClick={() => createView.mutate({ tableId: table.tableId })} 
-                sx={{ textTransform: "none", color: "black", justifyContent: "start" }}
+                sx={{ textTransform: "none", color: "black", justifyContent: "start", height: "32px", }}
             >
-                <AddIcon fontSize="small"/>
+                <AddIcon sx={{ fontSize: "17px", mr: 1, color: "#45454a" }}/>
                 Create new...
             </Button>
-            <div className="flex items-center">
+            <Box
+                sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    height: "32px",
+                    gap: 1,
+                    px: 1,
+                }}
+            >
+                <SearchOutlinedIcon sx={{ fontSize: "17px" }}/>
                 <TextField
-                    // variant="standard"
                     placeholder="Find a view"
                     sx={{
                         "& .MuiOutlinedInput-root": {
                             "& fieldset": {
                                 border: "none",
                             },
+                            "& input": {
+                                padding: "4px 0px",
+                                height: "100%",
+                                boxSizing: "border-box",
+                                fontSize: "13px",
+                            }
                         },
                     }}
                 />
-                <SettingsOutlinedIcon fontSize="small"/>
-            </div>
+                <SettingsOutlinedIcon sx={{ fontSize: "17px" }}/>
+            </Box>
             {isOpen && viewList.map((view) => (
-                <Button
+                <Box
                     key={view.viewId}
-                    onClick={() => handleSelectView(view.viewId)}
+                    onMouseEnter={() => setHoveredView(true)}
+                    onMouseLeave={() => setHoveredView(false)}
                     sx={{
-                    color: "black",
-                    textTransform: "none",
-                    justifyContent: "start",
-                    backgroundColor:
-                        currentViewId === view.viewId ? "#e0e0e0" : "transparent",
-                    "&:hover": { backgroundColor: "#f5f5f5" },
+                        "&:hover": { backgroundColor: "#f5f5f5" },
+                        width: "100%",
+                        height: "32.25px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        backgroundColor:
+                            currentViewId === view.viewId ? "#e0e0e0" : "transparent",
+                        px: "8px",
                     }}
                 >
-                    <TableChartOutlinedIcon fontSize="small" color="primary"/> {view.name}
-                </Button>
+                    <Button
+                        key={view.viewId}
+                        onClick={() => handleSelectView(view.viewId)}
+                        sx={{
+                            color: "black",
+                            textTransform: "none",
+                            fontSize: "13px",
+                            px: 0,
+                        }}
+                    >
+                        <TableChartOutlinedIcon
+                            sx={{ fontSize: "17px", mr: 1 }}
+                            color="primary"
+                        />
+                        {view.name}
+                    </Button>
+                    {hoveredView && (
+                        <Button
+                            sx={{
+                                minWidth: 0,
+                                width: "24px",
+                                height: "24px",
+                                borderRadius: "50%",
+                                padding: 0,
+                                justifyContent: "center",
+                                alignItems: "center",
+                                color: "#45454a",
+                            }}
+                            onClick={(e) => {
+                                setViewAnchorEl(e.currentTarget);
+                            }}
+                        >
+                            <MoreHorizOutlinedIcon/>
+                        </Button>
+                    )}
+                </Box>              
             ))}
+            
+            <Menu
+                open={Boolean(viewAnchorEl)}
+                anchorEl={viewAnchorEl}
+                onClose={() => setViewAnchorEl(null)}
+            >
+                <MenuItem>Add to 'My favourites'</MenuItem>
+                <MenuItem>Rename view</MenuItem>
+                <MenuItem>Duplicate view</MenuItem>
+                <MenuItem
+                    disabled={viewList.length === 1}
+                >
+                Delete View</MenuItem>
+            </Menu>
+
         </Drawer>
     )
 }

@@ -57,7 +57,15 @@ export default function TableHeaderBar({ openSidebar, setOpenSideBar, setHovered
     },[view]);
 
     return (
-        <Box className="flex" sx={{borderBottom: "1px solid rgba(0,0,0,0.1)"}}>
+        <Box 
+            className="flex" 
+            sx={{
+                borderTop: "1px solid rgba(0,0,0,0.1)",
+                borderBottom: "1px solid rgba(0,0,0,0.1)",
+                overflow: "hidden",
+                height: "48px",
+            }}
+        >
             <IconButton
                 onClick={() => setOpenSideBar(!openSidebar)}
                 onMouseEnter={() => setHovered(true)}
@@ -132,7 +140,6 @@ export default function TableHeaderBar({ openSidebar, setOpenSideBar, setHovered
                 openFilterMenu={openFilterMenu} 
                 onClose={handleCloseFilterMenu} 
                 view={view}
-                // setCurrentView={setCurrentView}
                 columns={table.columns}
             />
             <SortMenu sortAnchor={sortAnchor} openSortMenu={openSortMenu} onClose={handleCloseSortMenu} viewId={""} table={table}/>

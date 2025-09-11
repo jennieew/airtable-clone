@@ -15,9 +15,7 @@ type filterMenuProps = {
 
 export default function FilterMenu({ openFilterMenu, filterAnchor, onClose, view, columns }: filterMenuProps) {
   const utils = api.useUtils();
-  // const filters = (view.filters ?? []) as unknown as FilterCondition[];
   const [filters, setFilters] = useState<FilterCondition[]>(view.filters ?? [] as unknown as FilterCondition[]);
-  // const [currentView, setCurrentView] = useState(view);
 
   useEffect(() => {
     setFilters(view.filters ?? []);
@@ -87,10 +85,6 @@ export default function FilterMenu({ openFilterMenu, filterAnchor, onClose, view
       value: "",
     };
 
-    // setCurrentView({
-    //   ...currentView,
-    //   filters: [...filters, newFilter],
-    // });
     setFilters([...filters, newFilter]);
 
     addOrUpdateFilters.mutate({
@@ -147,10 +141,7 @@ export default function FilterMenu({ openFilterMenu, filterAnchor, onClose, view
     if (index === 0 && updatedFilters[0]) {
       updatedFilters[0] = { ...updatedFilters[0], logical: "where" };
     }
-    // setCurrentView({ 
-    //   ...currentView, 
-    //   filters: updatedFilters,
-    // })
+
     setFilters(updatedFilters);
 
     // if it is a valid filter, then delete from db
@@ -170,13 +161,7 @@ export default function FilterMenu({ openFilterMenu, filterAnchor, onClose, view
       logical: i === 0 ? "where" : updated.logical ?? filters[1]?.logical ?? "and",
     };
 
-    // setFilters(filters.map((f, j) => j === i ? candidate : f));
-
     const updatedFilters = filters.map((f, j) => (j === i ? candidate : f));
-    // setCurrentView({
-    //   ...currentView,
-    //   filters: updatedFilters,
-    // });
     setFilters(updatedFilters);
 
     // send to backend only when column/operator/value exist
@@ -250,16 +235,6 @@ export default function FilterMenu({ openFilterMenu, filterAnchor, onClose, view
               <TextField
                 value={f.value}
                 onChange={(e) => {
-                  // setCurrentView((prev) => {
-                  //   if (!prev) return prev;
-
-                  //   return {
-                  //     ...prev,
-                  //     filters: prev.filters.map((fi, j) =>
-                  //       j === i ? { ...fi, value: e.target.value } : fi
-                  //     ),
-                  //   };
-                  // });
                   setFilters(prev =>
                     prev.map((fi, j) =>
                       j === i ? { ...fi, value: e.target.value } : fi
