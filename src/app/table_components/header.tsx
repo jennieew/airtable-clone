@@ -60,7 +60,6 @@ export default function TableHeaderBar({ openSidebar, setOpenSideBar, setHovered
         <Box 
             className="flex" 
             sx={{
-                borderTop: "1px solid rgba(0,0,0,0.1)",
                 borderBottom: "1px solid rgba(0,0,0,0.1)",
                 overflow: "hidden",
                 height: "48px",
@@ -96,11 +95,11 @@ export default function TableHeaderBar({ openSidebar, setOpenSideBar, setHovered
             {!isLoading && (
                 <div className="flex items-center gap-1 ml-auto">
                 <Button>Add 100k Rows</Button>
-                <Button sx={{ textTransform: "none", color: "black" }}>
+                <Button sx={{ textTransform: "none", color: "#767881" }}>
                     <VisibilityOffOutlinedIcon fontSize="small" /> Hide Fields
                 </Button>
                 <Button
-                    sx={{ textTransform: "none", color: "black" }}
+                    sx={{ textTransform: "none", color: "#767881" }}
                     onClick={(e) => {
                     setFilterAnchor(e.currentTarget);
                     setOpenFilterMenu(!openFilterMenu);
@@ -108,11 +107,11 @@ export default function TableHeaderBar({ openSidebar, setOpenSideBar, setHovered
                 >
                     <FilterListOutlinedIcon fontSize="small" /> Filter
                 </Button>
-                <Button sx={{ textTransform: "none", color: "black" }}>
+                <Button sx={{ textTransform: "none", color: "#767881" }}>
                     <ListAltOutlinedIcon fontSize="small" /> Group
                 </Button>
                 <Button
-                    sx={{ textTransform: "none", color: "black" }}
+                    sx={{ textTransform: "none", color: "#767881" }}
                     onClick={(e) => {
                     setSortAnchor(e.currentTarget);
                     setOpenSortMenu(!openSortMenu);
@@ -120,17 +119,17 @@ export default function TableHeaderBar({ openSidebar, setOpenSideBar, setHovered
                 >
                     <ImportExportOutlinedIcon fontSize="small" /> Sort
                 </Button>
-                <Button sx={{ textTransform: "none", color: "black" }}>
+                <Button sx={{ textTransform: "none", color: "#767881" }}>
                     <FormatColorFillOutlinedIcon fontSize="small" /> Color
                 </Button>
-                <Button sx={{ textTransform: "none", color: "black" }}>
+                <Button sx={{ textTransform: "none", color: "#767881" }}>
                     <FormatLineSpacingIcon fontSize="small" />
                 </Button>
-                <Button sx={{ textTransform: "none", color: "black" }}>
+                <Button sx={{ textTransform: "none", color: "#767881" }}>
                     <IosShareIcon fontSize="small" /> Share and sync
                 </Button>
-                <Button sx={{ color: "black" }}>
-                    <SearchIcon fontSize="small" />
+                <Button sx={{ color: "#767881" }}>
+                    <SearchIcon fontSize="small"/>
                 </Button>
                 </div>
             )}

@@ -67,6 +67,10 @@ export default function BaseHeader({ base }: BaseCardProps) {
     <Box 
       className="flex items-center pl-[60px]"
       sx={{
+        position: "absolute",
+        top: 0,
+        left: 0,
+        zIndex: 2000,
         width: "100%",
         pl: "56px", 
         borderBottom: "1px solid rgba(0,0,0,0.1)",
@@ -74,6 +78,7 @@ export default function BaseHeader({ base }: BaseCardProps) {
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
+        backgroundColor: "white",
       }}
     >
       <div className="flex">

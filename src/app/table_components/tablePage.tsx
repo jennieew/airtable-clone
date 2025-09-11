@@ -5,13 +5,14 @@ import TableSideBar from "./sideBar";
 import TableDisplay from "./table";
 import type { FilterCondition, RowWithRelations, TableWithRelations, ViewWithFilters } from "../types";
 import { api } from "@/utils/api";
+import { LoadingTable } from "./loadingTable";
 
 type TablePageProps = {
     table: TableWithRelations | undefined;
 };
 
 export default function TablePage({ table }: TablePageProps) {
-    const [openSidebar, setOpenSideBar] = useState(false);
+    const [openSidebar, setOpenSideBar] = useState(true);
     const [hovered, setHovered] = useState(false);
 
     const [currentViewId, setCurrentViewId] = useState<string>(
@@ -46,7 +47,7 @@ export default function TablePage({ table }: TablePageProps) {
 
                 <Box sx={{ flex: 1, height: "100%", overflow: "auto" }}>
                     {isLoading ? (
-                        <div>Loading view...</div>
+                        <LoadingTable/>
                     ) : currentView ? (
                         <TableDisplay tableId={table.tableId} view={currentView}/>
                     ) : (

@@ -1,4 +1,4 @@
-import { Box, Button, Divider, Menu, MenuItem, Select, TextField } from "@mui/material";
+import { Box, Button, Divider, IconButton, Menu, MenuItem, Select, Tab, Tabs, TextField } from "@mui/material";
 import { useState } from "react";
 import { api } from "@/utils/api";
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -17,16 +17,12 @@ export default function TableTabs({ tables, selectedTab, setSelectedTab, baseId 
   const [renameAnchorEl, setRenameAnchorEl] = useState<null | HTMLElement>(null);
   const [tableName, setTableName] = useState<string>("");
 
-  const handleTabClick = (index: number, event: React.MouseEvent<HTMLButtonElement>) => {
-    if (selectedTab === index && tables[index]) {
-      setAnchorEl(event.currentTarget); 
-      setMenuTableId(tables[index].tableId);
-    } else {
-      setSelectedTab(index);
-      setAnchorEl(null);
-      setMenuTableId("");
+  const handleTabClick = (e: React.MouseEvent<HTMLElement>, index: number, tableId: string) => {
+    if (selectedTab === index) {
+      setAnchorEl(e.currentTarget as HTMLElement);
+      setMenuTableId(tableId);
     }
-  }
+  };
   
   const handleCloseMenu = () => {
     setAnchorEl(null);
@@ -41,6 +37,11 @@ export default function TableTabs({ tables, selectedTab, setSelectedTab, baseId 
     renameTable.mutate({ tableId: menuTableId, name: tableName });
     setRenameAnchorEl(null);
   }
+
+  // with tabs
+  const handleChange = (_event: React.SyntheticEvent, newValue: number) => {
+    setSelectedTab(newValue);
+  };
 
   const utils = api.useUtils();
   const deleteTable = api.table.deleteTable.useMutation({
@@ -100,29 +101,115 @@ export default function TableTabs({ tables, selectedTab, setSelectedTab, baseId 
   });
 
   return (
-    <Box sx={{ display: "flex", gap: 1, alignItems: "center"}}>
-      {tables.map((table, index) => (
-        <Button
-          key={table.tableId}
-          variant={selectedTab === index ? "contained" : "outlined"}
-          onClick={(e) => handleTabClick(index, e)}
-          sx={{
-            borderRadius: 0,
-            borderBottom: selectedTab === index ? 2 : 0,
-            borderLeft: 0,
-            borderRight: 0,
-            borderTop: 0,
-            borderColor: "black",
-            color: selectedTab === index ? "black" : "#50586f",
-            backgroundColor: "transparent",
-            fontWeight: selectedTab === index ? "bold" : "normal",
+    <Box 
+      sx={{
+        display: "flex", 
+        gap: 1, 
+        alignItems: "center", 
+        backgroundColor: "#eff6ff", 
+        ml: "-4px",
+        mt: "-4px",
+        pl: "4px",
+        pt: "4px",
+        zIndex: 2,
+      }}
+    >
+      <Tabs
+        value={selectedTab}
+        onChange={handleChange}
+        aria-label="Tables"
+        sx={{
+          minHeight: "32px",
+          height: "32px",
+          minWidth: "auto",
+          "& .MuiTabs-flexContainer": { height: "32px" },
+          "& .MuiTab-root": {
+            minHeight: "32px",
+            height: "32px",
+            minWidth: "auto",
+            paddingY: 0,
+            paddingX: "12px",
+            lineHeight: "32px",
             textTransform: "none",
-            height: "36px",
-          }}
-        >
-          {table.name} <ExpandMoreIcon fontSize="small"/>
-        </Button>
-      ))}
+            backgroundColor: "#eff6ff",
+            "&:first-of-type": {
+              borderLeft: "none",
+            },
+            fontSize: "13px",
+          },
+          "& .MuiTab-wrapper": {
+            flexDirection: "row",
+            gap: 0.5,
+            alignItems: "center",
+          },
+          "& .Mui-selected": {
+            color: "#313036 !important",
+            borderTopRightRadius: "4px",
+            backgroundColor: "white",
+            zIndex: 1,
+          },
+          "& .MuiTabs-indicator": { display: "none" },
+        }}
+      >
+      {tables.map((table, index) => {
+        const isSelected = selectedTab === index;
+        const isNextSelected = selectedTab === index + 1;
+        const isFirst = index === 0;
+
+        return (
+          <Tab
+            key={table.tableId}
+            value={index}
+            onClick={(e) => handleTabClick(e, index, table.tableId)}
+            id={`table-tab-${table.tableId}`}
+            aria-controls={
+              anchorEl && menuTableId === table.tableId ? "table-tab-menu" : undefined
+            }
+            aria-haspopup={isSelected ? "true" : undefined}
+            aria-expanded={
+              Boolean(anchorEl && menuTableId === table.tableId) ? "true" : undefined
+            }
+            disableRipple
+            sx={{
+              borderRight: isSelected ? "1px solid #e0e0e0" : "none",
+              borderLeft: isSelected && !isFirst ? "1px solid #e0e0e0" : "none",
+              backgroundColor: isSelected ? "white" : "#eff6ff",
+              fontWeight: isSelected ? "bold" : "normal",
+              borderTopLeftRadius: isSelected && index !== 0 ? "4px" : 0,
+              borderBottom: isSelected ? "none" : "1px solid #e0e0e0",
+              zIndex: isSelected ? 2 : 1,
+
+              "&::after": !isSelected && !isNextSelected ? {
+                content: '""',
+                position: "absolute",
+                top: "12px",
+                bottom: "12px",
+                right: 0,
+                width: "1px",
+                backgroundColor: "#e0e0e0",
+              } : undefined,
+            }}
+            label={
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 0.5,
+                  overflow: "hidden",
+                  whiteSpace: "nowrap",
+                  textOverflow: "ellipsis",
+                }}
+              >
+                <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>
+                  {table.name}
+                </span>
+                {isSelected && <ExpandMoreIcon sx={{ fontSize: 16 }} />}
+              </Box>
+            }
+          />
+        );
+      })}
+      </Tabs>
 
       <Menu
         anchorEl={anchorEl}

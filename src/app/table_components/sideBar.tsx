@@ -77,7 +77,7 @@ export default function TableSideBar({ openSidebar, setOpenSideBar, hovered, set
                 );
                 setCurrentViewId(newView.viewId);
             }
-            utils.table.getTable.invalidate({ tableId: table.tableId });
+            await utils.table.getTable.invalidate({ tableId: table.tableId });
         },
     })
 
@@ -112,7 +112,7 @@ export default function TableSideBar({ openSidebar, setOpenSideBar, hovered, set
                 onClick={() => createView.mutate({ tableId: table.tableId })} 
                 sx={{ textTransform: "none", color: "black", justifyContent: "start", height: "32px", }}
             >
-                <AddIcon sx={{ fontSize: "17px", mr: 1, color: "#45454a" }}/>
+                <AddIcon sx={{ fontSize: "13px", mr: 1, color: "#45454a" }}/>
                 Create new...
             </Button>
             <Box
@@ -157,7 +157,7 @@ export default function TableSideBar({ openSidebar, setOpenSideBar, hovered, set
                         justifyContent: "space-between",
                         backgroundColor:
                             currentViewId === view.viewId ? "#e0e0e0" : "transparent",
-                        px: "8px",
+                        p: "8px 12px",
                     }}
                 >
                     <Button
@@ -203,7 +203,7 @@ export default function TableSideBar({ openSidebar, setOpenSideBar, hovered, set
                 anchorEl={viewAnchorEl}
                 onClose={() => setViewAnchorEl(null)}
             >
-                <MenuItem>Add to 'My favourites'</MenuItem>
+                <MenuItem>{`Add to 'My favourites'`}</MenuItem>
                 <MenuItem>Rename view</MenuItem>
                 <MenuItem>Duplicate view</MenuItem>
                 <MenuItem
