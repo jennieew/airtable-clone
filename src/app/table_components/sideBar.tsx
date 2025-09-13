@@ -47,7 +47,7 @@ export default function TableSideBar({ openSidebar, setOpenSideBar, hovered, set
                 hiddenFields: "",
                 filters: [],
                 groupBy: "",
-                sort: "",
+                sort: [],
                 color: "",
                 rowHeight: "SHORT" as const,
             };

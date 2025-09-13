@@ -5,6 +5,8 @@ import {
   protectedProcedure,
 } from "@/server/api/trpc";
 import { buildPrismaFilter, createDefaultTable, type FilterCondition } from "./helper";
+import type { RowWithRelations } from "@/app/types";
+import { Prisma } from "@prisma/client";
 
 const isCompleteFilter = (f: FilterCondition): boolean => {
   // must have a column and operator always
@@ -25,6 +27,99 @@ export const tableRouter = createTRPCRouter({
       const { baseId } = input;
       return createDefaultTable(ctx, baseId);
     }),
+  // getSortedRows: protectedProcedure
+  //   .input(
+  //     z.object({
+  //       tableId: z.string(),
+  //       sort: z.array(
+  //         z.object({
+  //           column: z.string(),
+  //           direction: z.enum(["asc", "desc"]),
+  //           type: z.enum(["STRING", "NUMBER"]), // need type to cast correctly
+  //         })
+  //       ),
+  //     })
+  //   )
+  //   .query(async ({ ctx, input }) => {
+  //     const { tableId, sort } = input;
+
+  //     // If no sort, return all rows with their cells
+  //     if (!sort || sort.length === 0) {
+  //       const rows = await ctx.db.row.findMany({
+  //         where: { tableId },
+  //         include: { values: true },
+  //       });
+  //       return rows;
+  //     }
+
+  //     // Build order clauses safely
+  //     const orderClauses = sort
+  //       .map((s, i) => {
+  //         const colParam = s.column;
+  //         const dir = s.direction.toUpperCase();
+
+  //         if (s.type === "NUMBER") {
+  //           return `(SELECT c."numberValue" 
+  //                    FROM "Cell" c 
+  //                    WHERE c."rowId" = r."rowId" AND c."columnId" = '${colParam}') ${dir}`;
+  //         } else {
+  //           return `(SELECT c."stringValue" 
+  //                    FROM "Cell" c 
+  //                    WHERE c."rowId" = r."rowId" AND c."columnId" = '${colParam}') ${dir}`;
+  //         }
+  //       })
+  //       .join(", ");
+
+  //     // Fetch rows in sorted order
+  //     const rows = await ctx.db.$queryRaw<RowWithRelations[]>(
+  //       Prisma.sql`SELECT r.*
+  //                 FROM "Row" r
+  //                 WHERE r."tableId" = ${tableId}
+  //                 ORDER BY ${Prisma.raw(orderClauses)};`
+  //     );
+
+  //     // Attach cells to each row
+  //     const rowIds = rows.map((r) => r.rowId);
+  //     const cells = await ctx.db.cell.findMany({
+  //       where: { rowId: { in: rowIds } },
+  //     });
+
+  //     return rows.map((r) => ({
+  //       ...r,
+  //       values: cells.filter((c) => c.rowId === r.rowId),
+  //     }));
+  //   }),
+  // .query(async ({ ctx, input }) => {
+  //   const { tableId, sort } = input;
+
+  //   if (!sort || sort.length === 0) {
+  //     return ctx.db.row.findMany({
+  //       where: { tableId },
+  //       include: { values: true },
+  //     });
+  //   }
+
+  //   const orderClauses = sort.map(
+  //     s => `(SELECT c.value FROM "Cell" c WHERE c."rowId" = r."rowId" AND c."columnId" = '${s.column}') ${s.direction.toUpperCase()}`
+  //   ).join(", ");
+
+  //   const rows = await ctx.db.$queryRawUnsafe<RowWithRelations[]>(`
+  //     SELECT r.*
+  //     FROM "Row" r
+  //     WHERE r."tableId" = '${tableId}'
+  //     ORDER BY ${orderClauses}
+  //   `);
+
+  //   const rowIds = rows.map(r => r.rowId);
+  //   const cells = await ctx.db.cell.findMany({
+  //     where: { rowId: { in: rowIds } },
+  //   });
+
+  //   return rows.map(r => ({
+  //     ...r,
+  //     values: cells.filter(c => c.rowId === r.rowId),
+  //   }));
+  // }),
     
   getTable: protectedProcedure
     .input(

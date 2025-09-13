@@ -141,7 +141,7 @@ export default function TableHeaderBar({ openSidebar, setOpenSideBar, setHovered
                 view={view}
                 columns={table.columns}
             />
-            <SortMenu sortAnchor={sortAnchor} openSortMenu={openSortMenu} onClose={handleCloseSortMenu} viewId={""} table={table}/>
+            <SortMenu sortAnchor={sortAnchor} openSortMenu={openSortMenu} onClose={handleCloseSortMenu} view={view} columns={table.columns}/>
         </Box>
     )
 }

@@ -8,12 +8,18 @@ import {
 import { db } from "@/server/db";
 import { OPERATORS, type FilterCondition } from "./helper";
 import type { Prisma } from "@prisma/client";
+import type { SortCondition } from "@/app/types";
 
 const FilterConditionSchema = z.object({
   column: z.string(),
   operator: z.enum(OPERATORS),
   value: z.union([z.string(), z.number()]).optional(),
   logical: z.enum(["where", "and", "or"]).optional(),
+});
+
+const SortConditionSchema = z.object({
+  column: z.string(),
+  direction: z.enum(["asc", "desc"]),
 });
 
 export const viewRouter = createTRPCRouter({
@@ -38,10 +44,12 @@ export const viewRouter = createTRPCRouter({
       if (!view) throw new Error("View not found");
 
       const filters = z.array(FilterConditionSchema).parse(view.filters ?? []);
+      const sort = z.array(SortConditionSchema).parse(view.sort ?? []);
 
       return {
         ...view,
         filters,
+        sort,
       };
     }),
 
@@ -150,5 +158,68 @@ export const viewRouter = createTRPCRouter({
             filters: updatedFilters as unknown as Prisma.InputJsonArray[],
           },
         });
+      }),
+
+  addOrUpdateSort: protectedProcedure
+    .input(z.object({
+      viewId: z.string(),
+      index: z.number().optional(),
+      newSort: z.object({
+        column: z.string(),
+        direction: z.enum(["asc", "desc"]),
       })
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const view = await ctx.db.view.findUnique({
+        where: { viewId: input.viewId }
+      });
+
+      if (!view) throw new Error("View not found");
+
+      const existingSorts = (view.sort as unknown as SortCondition[]) || [];
+      let updatedSort: SortCondition[];
+
+      if (typeof input.index === "number") {
+        // update at index
+        updatedSort = existingSorts.map((f, i) =>
+          i === input.index ? input.newSort : f
+        );
+      } else {
+        // add new sort
+        updatedSort = [...existingSorts, input.newSort];
+      }
+
+      await ctx.db.view.update({
+        where: { viewId: input.viewId },
+        data: { sort: updatedSort as unknown as Prisma.InputJsonArray[], },
+      });
+
+      return updatedSort;
+    }),
+    deleteSort: protectedProcedure
+      .input(z.object({
+        viewId: z.string(),
+        index: z.number(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const view = await ctx.db.view.findUnique({
+          where: { viewId: input.viewId }
+        });
+
+        if (!view) throw new Error("View not found");
+
+        const sort = (view.sort as unknown as SortCondition[]) || [];
+        const updatedSort = sort.filter((_, i) => i !== input.index);
+
+        // if (input.index === 0 && updatedSort[0]) {
+        //   updatedSort[0] = { ...updatedSort[0], logical: "where" };
+        // }
+
+        return await ctx.db.view.update({
+          where: { viewId: input.viewId },
+          data: {
+            sort: updatedSort as unknown as Prisma.InputJsonArray[],
+          },
+        });
+      }),
 })

@@ -9,7 +9,6 @@ type filterMenuProps = {
   filterAnchor: HTMLElement | null;
   onClose: () => void;
   view: ViewWithFilters;
-  // setCurrentViewId: React.Dispatch<React.SetStateAction<string>>;
   columns: TableWithRelations["columns"];
 };
 
@@ -135,8 +134,6 @@ export default function FilterMenu({ openFilterMenu, filterAnchor, onClose, view
   })
 
   const handleDeleteFilter = (index: number) => {
-    // setFilters(filters.filter((_, i) => i !== index));
-
     const updatedFilters = filters.filter((_, i) => i !== index);
     if (index === 0 && updatedFilters[0]) {
       updatedFilters[0] = { ...updatedFilters[0], logical: "where" };
@@ -193,7 +190,6 @@ export default function FilterMenu({ openFilterMenu, filterAnchor, onClose, view
                 <Select
                   value={f.logical}
                   onChange={(e) => {
-                    // setFilters(filters.map((fi, j) => j === i ? { ...fi, logical: e.target.value as "and" | "or"} : fi));
                     handleUpdateFilter(i, {
                       logical: e.target.value as "and" | "or",
                     });

@@ -128,7 +128,7 @@ model View {
   hiddenFields String    @default("")
   filters      Json[]    @default([])
   groupBy      String    @default("")
-  sort         String    @default("")
+  sort         Json[]    @default([])
   color        String    @default("")
   rowHeight    RowHeight @default(SHORT)
   table        Table     @relation(fields: [tableId], references: [tableId], onDelete: Cascade)

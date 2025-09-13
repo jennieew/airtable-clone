@@ -1,5 +1,5 @@
 import type { Cell, Column, Row, Table, View } from "@prisma/client";
-import { useEffect, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import { api } from "@/utils/api";
 
 type RowWithRelations = Row & { values: Cell[] };
@@ -21,12 +21,16 @@ type TableCellProps = {
   editCell: ReturnType<EditCellMutation>;
 };
 
-export default function TableCell({ rowIndex, columnId, colType, rowData, setTableData, table, editCell }: TableCellProps) {
+export const TableCell = memo(function TableCell({ rowIndex, columnId, colType, rowData, setTableData, table, editCell }: TableCellProps) {
   // const row = tableData[rowIndex];
   const cell = rowData?.values.find(c => c.columnId === columnId);
-  const value = cell?.stringValue ?? cell?.numberValue ?? "";
+  const initialValue = cell?.stringValue ?? cell?.numberValue ?? "";
 
-  const [cellValue, setCellValue] = useState(value);
+  const [cellValue, setCellValue] = useState(initialValue);
+
+  useEffect(() => {
+    setCellValue(initialValue);
+  }, [initialValue]);
 
   const moveToCell = (nextRow: number, nextCol: number) => {
     const nextColumn = table.columns[nextCol];
@@ -92,6 +96,22 @@ export default function TableCell({ rowIndex, columnId, colType, rowData, setTab
     const cell = table.rows[rowIndex]?.values.find(c => c.columnId === columnId);
     if (!cell) return;
 
+    // optimistic update
+    setTableData(prev => {
+      const newData = [...prev];
+      const targetRow = newData[rowIndex];
+      if (!targetRow) return prev;
+
+      const targetCell = targetRow.values.find(c => c.columnId === columnId);
+      if (!targetCell) return prev;
+
+      if (colType === "STRING") targetCell.stringValue = cellValue as string;
+      if (colType === "NUMBER") targetCell.numberValue = Number(cellValue);
+
+      return newData;
+    });
+
+    // update database
     editCell.mutate({
       cellId: cell.cellId,
       stringValue: colType === "STRING" ? cellValue as string : null,
@@ -105,6 +125,14 @@ export default function TableCell({ rowIndex, columnId, colType, rowData, setTab
       data-col={columnId}
       value={cellValue}
       type={colType === "NUMBER" ? "number" : "text"}
+      style={{ 
+        width: "100%",
+        height: "100%",
+        boxSizing: "border-box",
+        padding: 0,
+        margin: 0,
+        border: "none",
+      }}
       onChange={(e) => {
         const val = colType === "NUMBER" ? Number(e.target.value) : e.target.value;
         setCellValue(val);
@@ -127,4 +155,4 @@ export default function TableCell({ rowIndex, columnId, colType, rowData, setTab
       onKeyDown={handleKeyDown}
     />
   );
-}
+})

@@ -3,15 +3,13 @@ import {
   flexRender, 
   getCoreRowModel, 
   useReactTable,
-  getSortedRowModel,
-  type SortingState,
 } from "@tanstack/react-table";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@mui/material";
 import ColumnMenu from "./columnMenu";
 import { api } from "@/utils/api";
 import TableHeader from "./tableHeaders";
-import TableCell from "./tableCell";
+import { TableCell } from "./tableCell";
 
 import {
   Table as ShadTable,
@@ -23,23 +21,22 @@ import {
 } from "@/components/ui/table";
 
 import { useVirtualizer } from "@tanstack/react-virtual";
-import type { RowWithRelations, ViewWithFilters } from "../types";
+import type { FilterCondition, RowWithRelations, SortCondition, ViewWithFilters } from "../types";
 import { LoadingTable } from "./loadingTable";
 
 type TableComponentProps = {
   tableId: string;
   view: ViewWithFilters;
-  // setCurrentView: React.Dispatch<React.SetStateAction<ViewWithFilters>>;
 };
 
 export default function TableDisplay({ tableId, view }: TableComponentProps) {
+  const utils = api.useUtils();
+
   // for creating a new column
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-
   const handleOpenColumnMenu = (event: React.MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);
   };
-
   const handleCloseMenu = () => {
     setAnchorEl(null);
   };
@@ -53,11 +50,24 @@ export default function TableDisplay({ tableId, view }: TableComponentProps) {
   const openHeaderMenu = (event: React.MouseEvent<HTMLElement>, columnId: string) => {
     setHeaderMenuAnchor({ columnId, anchorEl: event.currentTarget });
   };
-
   const closeHeaderMenu = () => setHeaderMenuAnchor(null);
 
-  const { data: table, isLoading, isError } = api.table.getTable.useQuery({ tableId });
+  const { data: table, isLoading } = api.table.getTable.useQuery({ tableId });
   const [tableData, setTableData] = useState<RowWithRelations[]>([]);
+
+  useEffect(() => {
+    if (table) setTableData(table.rows);
+  }, [table]);
+
+  // const { data: sortedRows, refetch: refetchRows, isFetching: rowsLoading } = api.table.getSortedRows.useQuery(
+  //   { tableId, sort: (view.sort ?? []) as unknown as SortCondition[] }, 
+  //   { enabled: !!tableId }
+  // );
+
+  // useEffect(() => {
+  //   if (sortedRows) setTableData(sortedRows);
+  // }, [sortedRows]);
+
   const columnHelper = createColumnHelper<Record<string, string | number>>();
 
   // VIRTUALISATION
@@ -69,11 +79,7 @@ export default function TableDisplay({ tableId, view }: TableComponentProps) {
     getScrollElement: () => scrollRef.current,
   });
 
-  // sorting 
-  const [sorting, setSorting] = useState<SortingState>([]);
-
   // mutation for adding a row
-  const utils = api.useUtils();
   const addRow = api.row.createRow.useMutation({
     onMutate: async({ tableId }) => {
       await utils.table.getTable.cancel({ tableId });
@@ -84,32 +90,21 @@ export default function TableDisplay({ tableId, view }: TableComponentProps) {
       }
 
       const tempId = crypto.randomUUID();
-      utils.table.getTable.setData({ tableId }, (old) => {
-        if (!old) return old;
-        const newRow: RowWithRelations = {
+      const newRow = {
+        rowId: tempId,
+        tableId,
+        authorId: previousTable.authorId,
+        order: previousTable.rows.length * 10,
+        values: previousTable.columns.map(col => ({
+          cellId: crypto.randomUUID(),
           rowId: tempId,
-          authorId: previousTable.authorId,
-          tableId,
-          order: old.rows.length > 0 
-            ? Math.max(...old.columns.map(c => c.order)) + 10 
-            : 0,
-          values: old.columns.map(col => ({
-            cellId: crypto.randomUUID(),
-            rowId: tempId,
-            columnId: col.columnId,
-            stringValue: col.type === "STRING" ? "" : null,
-            numberValue: col.type === "NUMBER" ? 0 : null,
-          })),
-        };
+          columnId: col.columnId,
+          stringValue: col.type === "STRING" ? "" : null,
+          numberValue: col.type === "NUMBER" ? 0 : null,
+        })),
+      };
         
-        setTableData(prev => [...prev, newRow]);
-
-        return {
-          ...old,
-          rows: [...old.rows, newRow],
-        };
-      });
-
+      setTableData(prev => [...prev, newRow]);
 
       return { previousTable, tempId }
     },
@@ -120,6 +115,7 @@ export default function TableDisplay({ tableId, view }: TableComponentProps) {
     },
     onSuccess: async (newRow, variables, context) => {
       await utils.table.getTable.invalidate({ tableId: variables.tableId });
+      // await refetchRows();
     }
   });
 
@@ -151,6 +147,7 @@ export default function TableDisplay({ tableId, view }: TableComponentProps) {
     },
     onSettled: async (data, error, variables) => {
       await utils.cell.getCell.invalidate({ cellId: variables.cellId });
+      // await refetchRows();
     },
   });
   
@@ -178,9 +175,15 @@ export default function TableDisplay({ tableId, view }: TableComponentProps) {
 
   // only set tableData initially or when adding rows
   useEffect(() => {
-    setTableData(filteredRows);
-  }, [filteredRows]);
+    if (!table) return;
 
+    // if there are filters, apply them, else just use table.rows
+    const hasFilters = view.filters.length > 0;
+    const newData = hasFilters ? filteredRows : table.rows;
+
+    setTableData(newData);
+  }, [table, filteredRows, view.filters]);
+  
   // create the columns for the tables, making them input cells
   const tableColumns = useMemo(() => {
     if (!table) return [];
@@ -225,16 +228,11 @@ export default function TableDisplay({ tableId, view }: TableComponentProps) {
     data: flatTableData,
     columns: tableColumns,
     getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    onSortingChange: setSorting,
-    state: {
-      sorting
-    }
   });
 
-  const CELL_STYLE = { width: "180px", minWidth: "180px", maxWidth: "180px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" };
-  const SIDE_CELL = { width: "50px", minWidth: "50px", maxWidth: "50px" };
-
+  // const CELL_STYLE = { width: "180px", minWidth: "180px", maxWidth: "180px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" };
+  // const SIDE_CELL = { width: "50px", minWidth: "50px", maxWidth: "50px" };
+  if (isLoading || !table) return <LoadingTable />;
   return (
     <>
       {isLoading || !table ? (
@@ -243,13 +241,13 @@ export default function TableDisplay({ tableId, view }: TableComponentProps) {
         <div className="bg-white container" ref={scrollRef}>
           <div 
             style={{ 
-              height: `${virtualiser.getTotalSize() + 73}px`,
+              height: `${virtualiser.getTotalSize() + 61}px`,
               // flex: 1
             }}>
             <ShadTable 
               style={{ 
                 tableLayout: "fixed",
-                // width: "100%",
+                width: "100%",
               }}
             >
               <ShadHeader>
@@ -261,7 +259,7 @@ export default function TableDisplay({ tableId, view }: TableComponentProps) {
                     }}
                   >
                     <TableHead style={{ 
-                      width: "50px", 
+                      width: "32px", 
                       borderRight: "none",
                       height: "32px",
                       padding: "0 8px",
@@ -275,6 +273,9 @@ export default function TableDisplay({ tableId, view }: TableComponentProps) {
                         style={{ 
                           width: "180px",
                           borderLeft: headerIndex === 0 ? "none" : undefined,
+                          paddingTop: 0,
+                          paddingBottom: 0,
+                          height: "32px",
                         }}
                         onClick={(e) => openHeaderMenu(e, header.column.id)}
                       >
@@ -285,9 +286,21 @@ export default function TableDisplay({ tableId, view }: TableComponentProps) {
                       </TableHead>
                     ))}
 
-                    <TableHead style={{ width: "50px" }}>
+                    <TableHead 
+                      style={{ 
+                        width: "50px",
+                        paddingTop: 0,
+                        paddingBottom: 0,
+                        height: "32px",
+                      }}
+                    >
                       <Button
-                        sx={{color: "black"}}
+                        sx={{ 
+                          color: "black", 
+                          minHeight: "32px", 
+                          height: "32px",
+                          minWidth: "auto",
+                        }}
                         onClick={handleOpenColumnMenu}
                       >+</Button>
                     </TableHead>
@@ -306,12 +319,14 @@ export default function TableDisplay({ tableId, view }: TableComponentProps) {
                         transform: `translateY(${
                           virtualRow.start - index * virtualRow.size
                         }px)`,
+                        // position: "absolute",
+                        // width: "100%",
                       }}
                     >
                       <ShadCell
                         style={{
                           borderRight: "none",
-                          width: "50px",
+                          width: "32px",
                         }}
                       >{index + 1}</ShadCell>
                       {row?.getVisibleCells().map((cell, cellIndex) => (
@@ -320,6 +335,7 @@ export default function TableDisplay({ tableId, view }: TableComponentProps) {
                           style={{ 
                             width: "180px",
                             borderLeft: cellIndex === 0 ? "none" : undefined,
+                            padding: 0,
                           }}
                         >
                           {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -332,6 +348,7 @@ export default function TableDisplay({ tableId, view }: TableComponentProps) {
                           borderRight: "none",
                           borderBottom: "none",
                           borderTop: "none",
+                          padding: 0,
                         }}
                       ></ShadCell>
                     </TableRow>

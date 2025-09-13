@@ -20,3 +20,8 @@ export interface FilterCondition {
 export type ViewWithFilters = Omit<View, "filters"> & {
   filters: FilterCondition[];
 };
+
+export interface SortCondition {
+  column: string;
+  direction: "asc" | "desc";
+}
